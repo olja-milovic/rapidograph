@@ -17,6 +17,7 @@ import {
   generateTicks,
   getMinAndMax,
   getSizeInPercentages,
+  getUpdatedYAxisWidth,
   noop,
 } from "./utils";
 
@@ -29,12 +30,6 @@ import {
 } from "./constants.ts";
 import styles from "./css/style.css?inline";
 
-/**
- * An example element.
- *
- * @slot - This element has a slot
- * @csspart button - The button
- */
 @customElement("rapido-graph")
 export class Rapidograph extends LitElement {
   static get styles() {
@@ -68,6 +63,16 @@ export class Rapidograph extends LitElement {
   private _yAxisMinWidth: number = MIN_Y_AXIS_WIDTH;
   @state()
   private _yAxisMaxWidth: number = MAX_Y_AXIS_WIDTH;
+
+  private get _yAxisWidthPercentage() {
+    const maxYAxisWidth = this._yAxisMaxWidth - this._yAxisMinWidth;
+    const currentYAxisWidth = this._yAxisWidth - this._yAxisMinWidth;
+    return ((currentYAxisWidth * 100) / maxYAxisWidth).toFixed(0);
+  }
+
+  private get _yAxisWidthDescription() {
+    return `Y-axis offset ${this._yAxisWidthPercentage}%`;
+  }
 
   @property({ type: Array })
   get data(): DataItem[] {
@@ -215,11 +220,6 @@ export class Rapidograph extends LitElement {
       }
     }
 
-    const maxYAxisWidth = this._yAxisMaxWidth - this._yAxisMinWidth;
-    const currentYAxisWidth = this._yAxisWidth - this._yAxisMinWidth;
-    const ariaValueNow = ((currentYAxisWidth * 100) / maxYAxisWidth).toFixed(0);
-    const description = `Y-axis offset ${ariaValueNow}%`;
-
     return html`
       <div class="rpg" theme=${this.theme}>
         <div
@@ -227,6 +227,7 @@ export class Rapidograph extends LitElement {
           style="
             --rpg-scrollbar-width: 15px;
             --rpg-x-axis-height: 31.666667938232422px;
+            ${[Y_AXIS_WIDTH_CSS_VAR]}: ${this._yAxisWidth}px;
           "
         >
           <div
@@ -253,25 +254,24 @@ export class Rapidograph extends LitElement {
               role="slider"
               aria-valuemin="0"
               aria-valuemax="100"
-              aria-valuenow=${ariaValueNow}
-              aria-valuetext=${description}
+              aria-valuenow=${this._yAxisWidthPercentage}
+              aria-valuetext=${this._yAxisWidthDescription}
               @dragstart=${noop}
               @pointerdown=${this.onPointerDown}
+              @keydown=${this.onKeyDown}
             >
               <div class="rpg-y-axis-line"></div>
             </div>
           </div>
         </div>
       </div>
-      <div aria-live="polite">${description}</div>
+      <div aria-live="polite">${this._yAxisWidthDescription}</div>
       <div id="rpg-get-text-width" class="rpg-axis-label"></div>
     `;
   }
 
   connectedCallback() {
     super.connectedCallback();
-    this.onPointerDown = this.onPointerDown.bind(this);
-    // this.onKeyDown = this.onKeyDown.bind(this);
     // this.addObservers();
     // this.addListeners();
   }
@@ -364,17 +364,37 @@ export class Rapidograph extends LitElement {
     window.addEventListener("pointerup", handlePointerUp);
   }
 
+  private onKeyDown(event: KeyboardEvent): void {
+    const percentage = parseInt(this._yAxisWidthPercentage ?? "0", 10);
+    const key = event.key;
+    const minimizeKey =
+      this.yAxisPosition === YAxisPosition.Left ? "ArrowLeft" : "ArrowRight";
+    const maximizeKey =
+      this.yAxisPosition === YAxisPosition.Left ? "ArrowRight" : "ArrowLeft";
+
+    if (key === minimizeKey) {
+      this._yAxisWidth =
+        getUpdatedYAxisWidth(
+          percentage,
+          this._yAxisMinWidth,
+          this._yAxisMaxWidth,
+          Math.max(percentage - 5, 0),
+        ) ?? this._yAxisWidth;
+    } else if (key === maximizeKey) {
+      this._yAxisWidth =
+        getUpdatedYAxisWidth(
+          percentage,
+          this._yAxisMinWidth,
+          this._yAxisMaxWidth,
+          Math.min(percentage + 5, 100),
+        ) ?? this._yAxisWidth;
+    }
+    event.preventDefault();
+  }
+
   disconnectedCallback(): void {
     this.vObserver?.unobserve(this.barContainer);
     this.hObserver?.unobserve(this.barContainer);
-
-    // this.yAxisLineContainer.removeEventListener("dragstart", noop);
-    // this.yAxisLineContainer.removeEventListener(
-    //   "pointerdown",
-    //   this.onPointerDown,
-    // );
-    // TODO: check if removed properly because of arrow function
-    // this.yAxisLineContainer.removeEventListener("keydown", this.onKeyDown);
   }
 }
 

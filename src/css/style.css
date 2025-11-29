@@ -309,9 +309,7 @@
 
 		&.y-axis-right {
 			.rpg-x-axis {
-				margin-right: calc(
-								var(--rpg-y-axis-width, 0) + var(--rpg-scrollbar-width, 0)
-				);
+				margin-right: calc(var(--rpg-y-axis-width, 0) + var(--rpg-scrollbar-width, 0));
 			}
 
 			.rpg-y-axis {

@@ -1,4 +1,3 @@
-import { Orientation, type YAxisWidths } from "../types";
 import {
   DEFAULT_Y_AXIS_WIDTH,
   MAX_CONTENT_WIDTH,
@@ -7,6 +6,7 @@ import {
   Y_AXIS_LINE_WIDTH,
   Y_AXIS_WIDTH_CSS_VAR,
 } from "../constants.ts";
+import { Orientation, type YAxisWidths } from "../types";
 
 export function noop() {}
 
@@ -163,4 +163,18 @@ export function calculateYAxisWidths(
   }
 
   return result;
+}
+
+export function getUpdatedYAxisWidth(
+  currentPercentage: number = 0,
+  minWidth = 0,
+  maxWidth = 100,
+  widthPercentage: number,
+): number | null {
+  if (currentPercentage === widthPercentage) {
+    return null;
+  }
+  const max = maxWidth - minWidth;
+  const absolute = (max * widthPercentage) / 100;
+  return absolute + minWidth;
 }
