@@ -1,4 +1,4 @@
-import { LitElement, css, html, unsafeCSS } from "lit";
+import { LitElement, type PropertyValues, css, html, unsafeCSS } from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 
@@ -16,6 +16,7 @@ import {
   checkIfSomePositiveAndNegative,
   generateTicks,
   getMinAndMax,
+  getScrollbarWidth,
   getSizeInPercentages,
   getUpdatedYAxisWidth,
   noop,
@@ -26,6 +27,7 @@ import {
   DEFAULT_Y_AXIS_WIDTH,
   MAX_Y_AXIS_WIDTH,
   MIN_Y_AXIS_WIDTH,
+  SCROLLBAR_WIDTH_CSS_VAR,
   Y_AXIS_WIDTH_CSS_VAR,
 } from "./constants.ts";
 import styles from "./css/style.css?inline";
@@ -39,30 +41,18 @@ export class Rapidograph extends LitElement {
   }
 
   private _data: DataItem[] = [];
-
-  // todo: should it be state
-  @state()
   private _values: number[] = [];
-  @state()
   private _ticks: number[] = [];
-  @state()
   private _min: number = 0;
-  @state()
   private _max: number = 100;
-  @state()
   private _hasPositive: boolean = true;
-  @state()
   private _hasNegative: boolean = true;
-  @state()
   private _allPositive: boolean = true;
-  @state()
   private _allNegative: boolean = true;
-  @state()
-  private _yAxisWidth: number = DEFAULT_Y_AXIS_WIDTH;
-  @state()
   private _yAxisMinWidth: number = MIN_Y_AXIS_WIDTH;
-  @state()
   private _yAxisMaxWidth: number = MAX_Y_AXIS_WIDTH;
+  private _vObserver: IntersectionObserver | undefined;
+  private _hObserver: IntersectionObserver | undefined;
 
   private get _yAxisWidthPercentage() {
     const maxYAxisWidth = this._yAxisMaxWidth - this._yAxisMinWidth;
@@ -74,7 +64,12 @@ export class Rapidograph extends LitElement {
     return `Y-axis offset ${this._yAxisWidthPercentage}%`;
   }
 
-  @property({ type: Array })
+  @state()
+  private _yAxisWidth: number = DEFAULT_Y_AXIS_WIDTH;
+  @state()
+  private _scrollbarWidth: number = 0;
+
+  @property({ type: Array, attribute: false })
   get data(): DataItem[] {
     return this._data || [];
   }
@@ -89,35 +84,22 @@ export class Rapidograph extends LitElement {
         this._values.push(item[label]);
       }
     }
+
     this._ticks = generateTicks(this._values);
-
-    const { min, max } = getMinAndMax(this._values, 5);
-    this._min = min;
-    this._max = max;
-
-    const { hasPositive, hasNegative } = checkIfSomePositiveAndNegative(
+    [this._min, this._max] = getMinAndMax(this._values, 5);
+    [this._hasPositive, this._hasNegative] = checkIfSomePositiveAndNegative(
       this._values,
     );
-
-    this._hasPositive = hasPositive;
-    this._hasNegative = hasNegative;
-
-    const { allPositive, allNegative } = checkIfAllPositiveOrNegative(
+    [this._allPositive, this._allNegative] = checkIfAllPositiveOrNegative(
       this._values,
     );
-    this._allPositive = allPositive;
-    this._allNegative = allNegative;
-
-    const { maxWidth, minWidth, width } = calculateYAxisWidths(
-      this.textSizeDiv,
-      this.wrapper,
-      this.yAxis,
-      this.orientation === Orientation.Vertical ? this._ticks : this._values,
-    );
-
-    this._yAxisMaxWidth = maxWidth;
-    this._yAxisMinWidth = minWidth;
-    this._yAxisWidth = width;
+    [this._yAxisMinWidth, this._yAxisWidth, this._yAxisMaxWidth] =
+      calculateYAxisWidths(
+        this.textSizeDiv,
+        this.wrapper,
+        this.yAxis,
+        this.orientation === Orientation.Vertical ? this._ticks : this._values,
+      );
   }
 
   @property({ type: Orientation })
@@ -138,18 +120,14 @@ export class Rapidograph extends LitElement {
   @property({ type: ShowLabels })
   showLabels = ShowLabels.Always;
 
-  // todo: need property?
-  @property({ attribute: false })
-  wrapperClasses = {
+  private _wrapperClasses = {
     "rpg-wrapper": true,
     [this.orientation]: true,
     [`x-axis-${this.xAxisPosition}`]: true,
     [`y-axis-${this.yAxisPosition}`]: true,
     [`labels-${this.showLabels}`]: true,
   };
-  @property({ attribute: false })
-  @property({ attribute: false })
-  barContainerClasses = {
+  private _barContainerClasses = {
     "rpg-bar-container": true,
     "start-from-half": this._hasPositive && this._hasNegative,
   };
@@ -164,8 +142,6 @@ export class Rapidograph extends LitElement {
   yAxis!: HTMLElement;
   @query("#rpg-get-text-width")
   textSizeDiv!: HTMLElement;
-  vObserver!: IntersectionObserver;
-  hObserver!: IntersectionObserver;
 
   render() {
     const xAxisLabelTemplates = [];
@@ -219,15 +195,15 @@ export class Rapidograph extends LitElement {
         );
       }
     }
-
+    // TODO: --rpg-x-axis-height
     return html`
       <div class="rpg" theme=${this.theme}>
         <div
-          class=${classMap(this.wrapperClasses)}
+          class=${classMap(this._wrapperClasses)}
           style="
-            --rpg-scrollbar-width: 15px;
+            ${SCROLLBAR_WIDTH_CSS_VAR}: ${this._scrollbarWidth}px;
+            ${Y_AXIS_WIDTH_CSS_VAR}: ${this._yAxisWidth}px;
             --rpg-x-axis-height: 31.666667938232422px;
-            ${[Y_AXIS_WIDTH_CSS_VAR]}: ${this._yAxisWidth}px;
           "
         >
           <div
@@ -240,7 +216,7 @@ export class Rapidograph extends LitElement {
               </div>
               <div class="rpg-content-container">
                 <div class="rpg-gridlines">${gridlineTemplates}</div>
-                <div class=${classMap(this.barContainerClasses)} role="list">
+                <div class=${classMap(this._barContainerClasses)} role="list">
                   ${barTemplates}
                 </div>
               </div>
@@ -270,55 +246,56 @@ export class Rapidograph extends LitElement {
     `;
   }
 
-  connectedCallback() {
-    super.connectedCallback();
-    // this.addObservers();
-    // this.addListeners();
+  protected firstUpdated(_changedProperties: PropertyValues): void {
+    super.firstUpdated(_changedProperties);
+    this.addObservers();
   }
 
-  // private addObservers() {
-  //   const options = {
-  //     root: this.scrollableElem,
-  //     threshold: 1,
-  //   };
-  //   const verticalOptions = {
-  //     rootMargin: "0px -16px",
-  //   };
-  //   const horizontalOptions = {
-  //     rootMargin: "-16px 0px",
-  //   };
-  //
-  //   const callback = () => {
-  //     const width = getScrollbarWidth(this.orientation, this.scrollableElem);
-  //     this.wrapper.style.setProperty(SCROLLBAR_WIDTH_CSS_VAR, `${width}px`);
-  //   };
-  //   this.vObserver = new IntersectionObserver(callback, {
-  //     ...options,
-  //     ...verticalOptions,
-  //   });
-  //   this.hObserver = new IntersectionObserver(callback, {
-  //     ...options,
-  //     ...horizontalOptions,
-  //   });
-  //
-  //   this.vObserver.observe(this.barContainer);
-  //   this.hObserver.observe(this.barContainer);
-  //
-  //   // this.vTooltipObserver = new IntersectionObserver(
-  //   //   (entries) => positionTooltip(this.orientation, entries),
-  //   //   {
-  //   //     ...options,
-  //   //     ...verticalOptions,
-  //   //   },
-  //   // );
-  //   // this.hTooltipObserver = new IntersectionObserver(
-  //   //   (entries) => positionTooltip(this.orientation, entries),
-  //   //   {
-  //   //     ...options,
-  //   //     ...horizontalOptions,
-  //   //   },
-  //   // );
-  // }
+  private addObservers() {
+    const options = {
+      root: this.scrollableElem,
+      threshold: 1,
+    };
+    const verticalOptions = {
+      rootMargin: "0px -16px",
+    };
+    const horizontalOptions = {
+      rootMargin: "-16px 0px",
+    };
+
+    const callback = () => {
+      this._scrollbarWidth = getScrollbarWidth(
+        this.orientation,
+        this.scrollableElem,
+      );
+    };
+    this._vObserver = new IntersectionObserver(callback, {
+      ...options,
+      ...verticalOptions,
+    });
+    this._hObserver = new IntersectionObserver(callback, {
+      ...options,
+      ...horizontalOptions,
+    });
+
+    this._vObserver.observe(this.barContainer);
+    this._hObserver.observe(this.barContainer);
+
+    // this.vTooltipObserver = new IntersectionObserver(
+    //   (entries) => positionTooltip(this.orientation, entries),
+    //   {
+    //     ...options,
+    //     ...verticalOptions,
+    //   },
+    // );
+    // this.hTooltipObserver = new IntersectionObserver(
+    //   (entries) => positionTooltip(this.orientation, entries),
+    //   {
+    //     ...options,
+    //     ...horizontalOptions,
+    //   },
+    // );
+  }
 
   private onPointerDown(pointerDownEvent: PointerEvent) {
     pointerDownEvent.preventDefault();
@@ -393,8 +370,8 @@ export class Rapidograph extends LitElement {
   }
 
   disconnectedCallback(): void {
-    this.vObserver?.unobserve(this.barContainer);
-    this.hObserver?.unobserve(this.barContainer);
+    this._vObserver?.unobserve(this.barContainer);
+    this._hObserver?.unobserve(this.barContainer);
   }
 }
 

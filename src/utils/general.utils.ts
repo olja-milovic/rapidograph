@@ -6,33 +6,31 @@ import {
   Y_AXIS_LINE_WIDTH,
   Y_AXIS_WIDTH_CSS_VAR,
 } from "../constants.ts";
-import { Orientation, type YAxisWidths } from "../types";
+import { Orientation } from "../types";
 
 export function noop() {}
 
-export function checkIfSomePositiveAndNegative(values: number[] = []): {
-  hasPositive: boolean;
-  hasNegative: boolean;
-} {
+export function checkIfSomePositiveAndNegative(
+  values: number[] = [],
+): [boolean, boolean] {
   const hasPositive = values.some((value) => value > 0);
   const hasNegative = values.some((value) => value < 0);
-  return { hasPositive, hasNegative };
+  return [hasPositive, hasNegative];
 }
 
-export function checkIfAllPositiveOrNegative(values: number[] = []): {
-  allPositive: boolean;
-  allNegative: boolean;
-} {
+export function checkIfAllPositiveOrNegative(
+  values: number[] = [],
+): [boolean, boolean] {
   const allPositive = values.every((value) => value >= 0);
   const allNegative = values.every((value) => value <= 0);
-  return { allPositive, allNegative };
+  return [allPositive, allNegative];
 }
 
 export function getMinAndMax(
   values: number[] = [],
   noOfTicks = 2,
-): { min: number; max: number } {
-  const { hasPositive, hasNegative } = checkIfSomePositiveAndNegative(values);
+): [number, number] {
+  const [hasPositive, hasNegative] = checkIfSomePositiveAndNegative(values);
 
   // TODO: check if correct
   // calculate the next positive value divisible by the number of ticks
@@ -46,10 +44,7 @@ export function getMinAndMax(
       ),
   );
 
-  return {
-    min: hasNegative ? -Math.abs(maxValue) : 0,
-    max: hasPositive ? maxValue : 0,
-  };
+  return [hasNegative ? -Math.abs(maxValue) : 0, hasPositive ? maxValue : 0];
 }
 
 export function generateTicks(
@@ -57,7 +52,7 @@ export function generateTicks(
   ticks = 5,
   decimals = 1,
 ): number[] {
-  const { min = 0, max = 100 } = getMinAndMax(values, ticks);
+  const [min = 0, max = 100] = getMinAndMax(values, ticks);
   const interval = (max - min) / (ticks - 1);
 
   const tickValues = Array.from({ length: ticks - 1 }, (_, i) => i).reduce(
@@ -122,12 +117,12 @@ export function calculateYAxisWidths(
   wrapper: HTMLElement,
   yAxis: HTMLElement,
   values: (string | number)[] = [],
-): YAxisWidths {
-  const result = {
-    maxWidth: MAX_Y_AXIS_WIDTH,
-    minWidth: MIN_Y_AXIS_WIDTH,
-    width: DEFAULT_Y_AXIS_WIDTH,
-  };
+): number[] {
+  const result = new Map<string, number>([
+    ["min", MIN_Y_AXIS_WIDTH],
+    ["width", DEFAULT_Y_AXIS_WIDTH],
+    ["max", MAX_Y_AXIS_WIDTH],
+  ]);
 
   if (values.length) {
     // reset width when values change so that the new one is calculated correctly
@@ -142,8 +137,8 @@ export function calculateYAxisWidths(
     );
     // margin 4px + 2px to avoid ellipsis = 6
     let newWidth = longestLabelWidth + Y_AXIS_LINE_WIDTH + 6;
-    result.maxWidth = Math.max(newWidth, MAX_Y_AXIS_WIDTH);
-    result.minWidth = Math.min(newWidth, MIN_Y_AXIS_WIDTH);
+    result.set("min", Math.min(newWidth, MIN_Y_AXIS_WIDTH));
+    result.set("max", Math.max(newWidth, MAX_Y_AXIS_WIDTH));
 
     // TODO: works if labels are loaded beforehand
     // let offsetWidth = Math.ceil(
@@ -157,12 +152,12 @@ export function calculateYAxisWidths(
       newWidth = wrapper.offsetWidth - MAX_CONTENT_WIDTH;
     }
 
-    result.width = newWidth;
+    result.set("width", newWidth);
     wrapper.style.setProperty(Y_AXIS_WIDTH_CSS_VAR, `${newWidth}px`);
     yAxis.style.setProperty("width", `var(${Y_AXIS_WIDTH_CSS_VAR})`);
   }
 
-  return result;
+  return Array.from(result.values());
 }
 
 export function getUpdatedYAxisWidth(
