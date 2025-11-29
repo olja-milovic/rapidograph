@@ -1,7 +1,33 @@
-import { LitElement, css, html } from 'lit'
-import { customElement, property } from 'lit/decorators.js'
-import litLogo from './assets/lit.svg'
-import viteLogo from '/vite.svg'
+import { LitElement, css, html, unsafeCSS } from "lit";
+import { customElement, property, query, state } from "lit/decorators.js";
+import { classMap } from "lit/directives/class-map.js";
+
+import {
+  type DataItem,
+  Orientation,
+  ShowLabels,
+  Theme,
+  XAxisPosition,
+  YAxisPosition,
+} from "./types";
+import {
+  calculateYAxisWidths,
+  checkIfAllPositiveOrNegative,
+  checkIfSomePositiveAndNegative,
+  generateTicks,
+  getMinAndMax,
+  getSizeInPercentages,
+  noop,
+} from "./utils";
+
+// "?inline" makes Vite import CSS as a string instead of injecting it globally
+import {
+  DEFAULT_Y_AXIS_WIDTH,
+  MAX_Y_AXIS_WIDTH,
+  MIN_Y_AXIS_WIDTH,
+  Y_AXIS_WIDTH_CSS_VAR,
+} from "./constants.ts";
+import styles from "./css/style.css?inline";
 
 /**
  * An example element.
@@ -9,125 +35,351 @@ import viteLogo from '/vite.svg'
  * @slot - This element has a slot
  * @csspart button - The button
  */
-@customElement('my-element')
-export class MyElement extends LitElement {
-	/**
-	 * Copy for the read the docs hint.
-	 */
-	@property()
-	docsHint = 'Click on the Vite and Lit logos to learn more'
+@customElement("rapido-graph")
+export class Rapidograph extends LitElement {
+  static get styles() {
+    return css`
+      ${unsafeCSS(styles)}
+    `;
+  }
 
-	/**
-	 * The number of times the button has been clicked.
-	 */
-	@property({ type: Number })
-	count = 0
+  private _data: DataItem[] = [];
 
-	render () {
-		return html`
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src=${ viteLogo } class="logo" alt="Vite logo"/>
-        </a>
-        <a href="https://lit.dev" target="_blank">
-          <img src=${ litLogo } class="logo lit" alt="Lit logo"/>
-        </a>
+  // todo: should it be state
+  @state()
+  private _values: number[] = [];
+  @state()
+  private _ticks: number[] = [];
+  @state()
+  private _min: number = 0;
+  @state()
+  private _max: number = 100;
+  @state()
+  private _hasPositive: boolean = true;
+  @state()
+  private _hasNegative: boolean = true;
+  @state()
+  private _allPositive: boolean = true;
+  @state()
+  private _allNegative: boolean = true;
+  @state()
+  private _yAxisWidth: number = DEFAULT_Y_AXIS_WIDTH;
+  @state()
+  private _yAxisMinWidth: number = MIN_Y_AXIS_WIDTH;
+  @state()
+  private _yAxisMaxWidth: number = MAX_Y_AXIS_WIDTH;
+
+  @property({ type: Array })
+  get data(): DataItem[] {
+    return this._data || [];
+  }
+
+  set data(val: DataItem[]) {
+    const oldVal = this._data;
+    this._data = val;
+    this.requestUpdate("data", oldVal);
+
+    for (const item of this.data) {
+      for (const label in item) {
+        this._values.push(item[label]);
+      }
+    }
+    this._ticks = generateTicks(this._values);
+
+    const { min, max } = getMinAndMax(this._values, 5);
+    this._min = min;
+    this._max = max;
+
+    const { hasPositive, hasNegative } = checkIfSomePositiveAndNegative(
+      this._values,
+    );
+
+    this._hasPositive = hasPositive;
+    this._hasNegative = hasNegative;
+
+    const { allPositive, allNegative } = checkIfAllPositiveOrNegative(
+      this._values,
+    );
+    this._allPositive = allPositive;
+    this._allNegative = allNegative;
+
+    const { maxWidth, minWidth, width } = calculateYAxisWidths(
+      this.textSizeDiv,
+      this.wrapper,
+      this.yAxis,
+      this.orientation === Orientation.Vertical ? this._ticks : this._values,
+    );
+
+    this._yAxisMaxWidth = maxWidth;
+    this._yAxisMinWidth = minWidth;
+    this._yAxisWidth = width;
+  }
+
+  @property({ type: Orientation })
+  orientation = Orientation.Vertical;
+
+  @property({ type: XAxisPosition })
+  xAxisPosition = XAxisPosition.Bottom;
+
+  @property({ type: YAxisPosition })
+  yAxisPosition = YAxisPosition.Left;
+
+  @property({ type: Theme })
+  theme = Theme.Light;
+
+  @property({ type: Theme })
+  tooltipTheme = Theme.Light;
+
+  @property({ type: ShowLabels })
+  showLabels = ShowLabels.Always;
+
+  // todo: need property?
+  @property({ attribute: false })
+  wrapperClasses = {
+    "rpg-wrapper": true,
+    [this.orientation]: true,
+    [`x-axis-${this.xAxisPosition}`]: true,
+    [`y-axis-${this.yAxisPosition}`]: true,
+    [`labels-${this.showLabels}`]: true,
+  };
+  @property({ attribute: false })
+  @property({ attribute: false })
+  barContainerClasses = {
+    "rpg-bar-container": true,
+    "start-from-half": this._hasPositive && this._hasNegative,
+  };
+
+  @query(".rpg-wrapper")
+  wrapper!: HTMLElement;
+  @query(".rpg-scrollable")
+  scrollableElem!: HTMLElement;
+  @query(".rpg-bar-container")
+  barContainer!: HTMLElement;
+  @query(".rpg-y-axis")
+  yAxis!: HTMLElement;
+  @query("#rpg-get-text-width")
+  textSizeDiv!: HTMLElement;
+  vObserver!: IntersectionObserver;
+  hObserver!: IntersectionObserver;
+
+  render() {
+    const xAxisLabelTemplates = [];
+    const yAxisLabelTemplates = [];
+    const xAxisValues =
+      this.orientation === Orientation.Vertical ? this._values : this._ticks;
+    const yAxisValues =
+      this.orientation === Orientation.Vertical ? this._ticks : this._values;
+
+    for (const item of xAxisValues) {
+      xAxisLabelTemplates.push(html`
+        <div class="rpg-axis-label" title=${item}>${item}</div>
+      `);
+    }
+    for (const item of yAxisValues) {
+      yAxisLabelTemplates.push(html`
+        <div class="rpg-axis-label" title=${item}>${item}</div>
+      `);
+    }
+
+    const gridlineTemplates = [];
+    for (let i = 0; i < this._ticks.length - 1; i++) {
+      gridlineTemplates.push(html`<div class="rpg-gridline"></div>`);
+    }
+
+    const barTemplates = [];
+    for (const item of this.data) {
+      for (const label in item) {
+        const value = item[label];
+        const isPositive =
+          this._allPositive || !this._allNegative ? value >= 0 : value > 0;
+        const barSize = getSizeInPercentages(value, this._min, this._max);
+        const size =
+          this.orientation === Orientation.Vertical ? "height" : "width";
+
+        barTemplates.push(
+          html`<div
+            class="rpg-bar ${isPositive ? "positive" : "negative"}"
+            aria-label="${label}: ${value}"
+            role="listitem"
+            tabindex="0"
+          >
+            <div
+              class="rpg-bar-content"
+              style="${size}: ${Math.abs(barSize)}%;"
+            >
+              <div class="rpg-bar-label">${value}</div>
+              <div class="rpg-small-bar-label">${value}</div>
+            </div>
+          </div>`,
+        );
+      }
+    }
+
+    const maxYAxisWidth = this._yAxisMaxWidth - this._yAxisMinWidth;
+    const currentYAxisWidth = this._yAxisWidth - this._yAxisMinWidth;
+    const ariaValueNow = ((currentYAxisWidth * 100) / maxYAxisWidth).toFixed(0);
+    const description = `Y-axis offset ${ariaValueNow}%`;
+
+    return html`
+      <div class="rpg" theme=${this.theme}>
+        <div
+          class=${classMap(this.wrapperClasses)}
+          style="
+            --rpg-scrollbar-width: 15px;
+            --rpg-x-axis-height: 31.666667938232422px;
+          "
+        >
+          <div
+            class="rpg-scrollable"
+            style="--rpg-labels-length: 14; --rpg-ticks-length: 5;"
+          >
+            <div class="rpg-scrollable-content">
+              <div class="rpg-x-axis">
+                <div class="rpg-x-axis-labels">${xAxisLabelTemplates}</div>
+              </div>
+              <div class="rpg-content-container">
+                <div class="rpg-gridlines">${gridlineTemplates}</div>
+                <div class=${classMap(this.barContainerClasses)} role="list">
+                  ${barTemplates}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="rpg-y-axis">
+            <div class="rpg-y-axis-labels">${yAxisLabelTemplates}</div>
+            <div
+              class="rpg-y-axis-line-container"
+              tabindex="1"
+              role="slider"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              aria-valuenow=${ariaValueNow}
+              aria-valuetext=${description}
+              @dragstart=${noop}
+              @pointerdown=${this.onPointerDown}
+            >
+              <div class="rpg-y-axis-line"></div>
+            </div>
+          </div>
+        </div>
       </div>
-      <slot></slot>
-      <div class="card">
-        <button @click=${ this._onClick } part="button">
-          count is ${ this.count }
-        </button>
-      </div>
-      <p class="read-the-docs">${ this.docsHint }</p>
-		`
-	}
+      <div aria-live="polite">${description}</div>
+      <div id="rpg-get-text-width" class="rpg-axis-label"></div>
+    `;
+  }
 
-	private _onClick () {
-		this.count++
-	}
+  connectedCallback() {
+    super.connectedCallback();
+    this.onPointerDown = this.onPointerDown.bind(this);
+    // this.onKeyDown = this.onKeyDown.bind(this);
+    // this.addObservers();
+    // this.addListeners();
+  }
 
-	static styles = css`
-		:host {
-			max-width: 1280px;
-			margin: 0 auto;
-			padding: 2rem;
-			text-align: center;
-		}
+  // private addObservers() {
+  //   const options = {
+  //     root: this.scrollableElem,
+  //     threshold: 1,
+  //   };
+  //   const verticalOptions = {
+  //     rootMargin: "0px -16px",
+  //   };
+  //   const horizontalOptions = {
+  //     rootMargin: "-16px 0px",
+  //   };
+  //
+  //   const callback = () => {
+  //     const width = getScrollbarWidth(this.orientation, this.scrollableElem);
+  //     this.wrapper.style.setProperty(SCROLLBAR_WIDTH_CSS_VAR, `${width}px`);
+  //   };
+  //   this.vObserver = new IntersectionObserver(callback, {
+  //     ...options,
+  //     ...verticalOptions,
+  //   });
+  //   this.hObserver = new IntersectionObserver(callback, {
+  //     ...options,
+  //     ...horizontalOptions,
+  //   });
+  //
+  //   this.vObserver.observe(this.barContainer);
+  //   this.hObserver.observe(this.barContainer);
+  //
+  //   // this.vTooltipObserver = new IntersectionObserver(
+  //   //   (entries) => positionTooltip(this.orientation, entries),
+  //   //   {
+  //   //     ...options,
+  //   //     ...verticalOptions,
+  //   //   },
+  //   // );
+  //   // this.hTooltipObserver = new IntersectionObserver(
+  //   //   (entries) => positionTooltip(this.orientation, entries),
+  //   //   {
+  //   //     ...options,
+  //   //     ...horizontalOptions,
+  //   //   },
+  //   // );
+  // }
 
-		.logo {
-			height: 6em;
-			padding: 1.5em;
-			will-change: filter;
-			transition: filter 300ms;
-		}
+  private onPointerDown(pointerDownEvent: PointerEvent) {
+    pointerDownEvent.preventDefault();
+    let newWidth = this._yAxisWidth;
+    const self = this;
 
-		.logo:hover {
-			filter: drop-shadow(0 0 2em #646cffaa);
-		}
+    const handlePointerMove = (pointerMoveEvent: PointerEvent) => {
+      const parent = self.wrapper;
 
-		.logo.lit:hover {
-			filter: drop-shadow(0 0 2em #325cffaa);
-		}
+      const moveClientX = pointerMoveEvent.clientX;
+      const downClientX = pointerDownEvent.clientX;
 
-		.card {
-			padding: 2em;
-		}
+      newWidth =
+        self._yAxisWidth +
+        (self.yAxisPosition === YAxisPosition.Left
+          ? moveClientX - downClientX
+          : downClientX - moveClientX);
+      let allowedMaxWidth = self._yAxisMaxWidth;
 
-		.read-the-docs {
-			color: #888;
-		}
+      // the pointer is out of slider => lock the thumb within the boundaries
+      if (newWidth < self._yAxisMinWidth) {
+        newWidth = self._yAxisMinWidth;
+      }
 
-		::slotted(h1) {
-			font-size: 3.2em;
-			line-height: 1.1;
-		}
+      if (self._yAxisMaxWidth > parent.offsetWidth - MAX_Y_AXIS_WIDTH) {
+        allowedMaxWidth = parent.offsetWidth - MAX_Y_AXIS_WIDTH;
+      }
+      if (newWidth > allowedMaxWidth) {
+        newWidth = allowedMaxWidth;
+      }
+      this.wrapper.style.setProperty(Y_AXIS_WIDTH_CSS_VAR, `${newWidth}px`);
+    };
 
-		a {
-			font-weight: 500;
-			color: #646cff;
-			text-decoration: inherit;
-		}
+    function handlePointerUp(): void {
+      self._yAxisWidth = newWidth;
+      document.body.style.removeProperty("cursor");
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    }
 
-		a:hover {
-			color: #535bf2;
-		}
+    document.body.style.cursor = "col-resize";
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+  }
 
-		button {
-			border-radius: 8px;
-			border: 1px solid transparent;
-			padding: 0.6em 1.2em;
-			font-size: 1em;
-			font-weight: 500;
-			font-family: inherit;
-			background-color: #1a1a1a;
-			cursor: pointer;
-			transition: border-color 0.25s;
-		}
+  disconnectedCallback(): void {
+    this.vObserver?.unobserve(this.barContainer);
+    this.hObserver?.unobserve(this.barContainer);
 
-		button:hover {
-			border-color: #646cff;
-		}
-
-		button:focus,
-		button:focus-visible {
-			outline: 4px auto -webkit-focus-ring-color;
-		}
-
-		@media (prefers-color-scheme: light) {
-			a:hover {
-				color: #747bff;
-			}
-
-			button {
-				background-color: #f9f9f9;
-			}
-		}
-	`
+    // this.yAxisLineContainer.removeEventListener("dragstart", noop);
+    // this.yAxisLineContainer.removeEventListener(
+    //   "pointerdown",
+    //   this.onPointerDown,
+    // );
+    // TODO: check if removed properly because of arrow function
+    // this.yAxisLineContainer.removeEventListener("keydown", this.onKeyDown);
+  }
 }
 
 declare global {
-	interface HTMLElementTagNameMap {
-		'my-element': MyElement
-	}
+  interface HTMLElementTagNameMap {
+    rapidograph: Rapidograph;
+  }
 }
