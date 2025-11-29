@@ -1,6 +1,7 @@
 import { LitElement, type PropertyValues, css, html, unsafeCSS } from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
+import { styleMap } from "lit/directives/style-map.js";
 
 import {
   type DataItem,
@@ -24,10 +25,12 @@ import {
 
 // "?inline" makes Vite import CSS as a string instead of injecting it globally
 import {
+  DATA_LENGTH_CSS_VAR,
   DEFAULT_Y_AXIS_WIDTH,
   MAX_Y_AXIS_WIDTH,
   MIN_Y_AXIS_WIDTH,
   SCROLLBAR_WIDTH_CSS_VAR,
+  X_AXIS_HEIGHT_CSS_VAR,
   Y_AXIS_WIDTH_CSS_VAR,
 } from "./constants.ts";
 import styles from "./css/style.css?inline";
@@ -41,6 +44,7 @@ export class Rapidograph extends LitElement {
   }
 
   private _data: DataItem[] = [];
+  private _labels: string[] = [];
   private _values: number[] = [];
   private _ticks: number[] = [];
   private _min: number = 0;
@@ -65,6 +69,8 @@ export class Rapidograph extends LitElement {
   }
 
   @state()
+  private _xAxisHeight: number = 0;
+  @state()
   private _yAxisWidth: number = DEFAULT_Y_AXIS_WIDTH;
   @state()
   private _scrollbarWidth: number = 0;
@@ -74,14 +80,15 @@ export class Rapidograph extends LitElement {
     return this._data || [];
   }
 
-  set data(val: DataItem[]) {
-    const oldVal = this._data;
-    this._data = val;
-    this.requestUpdate("data", oldVal);
+  set data(value: DataItem[]) {
+    const oldValue = this._data;
+    this._data = value;
+    this.requestUpdate("data", oldValue);
 
     for (const item of this.data) {
       for (const label in item) {
         this._values.push(item[label]);
+        this._labels.push(label);
       }
     }
 
@@ -93,13 +100,6 @@ export class Rapidograph extends LitElement {
     [this._allPositive, this._allNegative] = checkIfAllPositiveOrNegative(
       this._values,
     );
-    [this._yAxisMinWidth, this._yAxisWidth, this._yAxisMaxWidth] =
-      calculateYAxisWidths(
-        this.textSizeDiv,
-        this.wrapper,
-        this.yAxis,
-        this.orientation === Orientation.Vertical ? this._ticks : this._values,
-      );
   }
 
   @property({ type: Orientation })
@@ -120,17 +120,29 @@ export class Rapidograph extends LitElement {
   @property({ type: ShowLabels })
   showLabels = ShowLabels.Always;
 
-  private _wrapperClasses = {
-    "rpg-wrapper": true,
-    [this.orientation]: true,
-    [`x-axis-${this.xAxisPosition}`]: true,
-    [`y-axis-${this.yAxisPosition}`]: true,
-    [`labels-${this.showLabels}`]: true,
-  };
-  private _barContainerClasses = {
-    "rpg-bar-container": true,
-    "start-from-half": this._hasPositive && this._hasNegative,
-  };
+  private get _wrapperClasses() {
+    return {
+      "rpg-wrapper": true,
+      [this.orientation]: true,
+      [`x-axis-${this.xAxisPosition}`]: true,
+      [`y-axis-${this.yAxisPosition}`]: true,
+      [`labels-${this.showLabels}`]: true,
+    };
+  }
+  private get _wrapperStyles() {
+    return {
+      [SCROLLBAR_WIDTH_CSS_VAR]: `${this._scrollbarWidth}px`,
+      [Y_AXIS_WIDTH_CSS_VAR]: `${this._yAxisWidth}px`,
+      [X_AXIS_HEIGHT_CSS_VAR]: `${this._xAxisHeight}px`,
+      [DATA_LENGTH_CSS_VAR]: this._values.length,
+    };
+  }
+  private get _barContainerClasses() {
+    return {
+      "rpg-bar-container": true,
+      "start-from-half": this._hasPositive && this._hasNegative,
+    };
+  }
 
   @query(".rpg-wrapper")
   wrapper!: HTMLElement;
@@ -138,29 +150,72 @@ export class Rapidograph extends LitElement {
   scrollableElem!: HTMLElement;
   @query(".rpg-bar-container")
   barContainer!: HTMLElement;
+  @query(".rpg-x-axis")
+  xAxis!: HTMLElement;
   @query(".rpg-y-axis")
   yAxis!: HTMLElement;
   @query("#rpg-get-text-width")
   textSizeDiv!: HTMLElement;
 
+  updated(changedProperties: Map<string, never>) {
+    if (this.xAxis) {
+      this._xAxisHeight = this.xAxis.getBoundingClientRect().height ?? 1 - 1;
+    }
+
+    if (changedProperties.get("orientation") || changedProperties.get("data")) {
+      [this._yAxisMinWidth, this._yAxisWidth, this._yAxisMaxWidth] =
+        calculateYAxisWidths(
+          this.textSizeDiv,
+          this.wrapper,
+          this.yAxis,
+          this.orientation === Orientation.Vertical
+            ? this._ticks
+            : this._labels,
+        );
+    }
+  }
+
   render() {
+    const isVertical = this.orientation === Orientation.Vertical;
     const xAxisLabelTemplates = [];
     const yAxisLabelTemplates = [];
-    const xAxisValues =
-      this.orientation === Orientation.Vertical ? this._values : this._ticks;
-    const yAxisValues =
-      this.orientation === Orientation.Vertical ? this._ticks : this._values;
+    const xAxisValues = isVertical ? this._labels : this._ticks;
+    const yAxisValues = isVertical ? this._ticks : this._labels;
 
     for (const item of xAxisValues) {
       xAxisLabelTemplates.push(html`
         <div class="rpg-axis-label" title=${item}>${item}</div>
       `);
     }
+    const xAxisTemplate = html`
+      <div class="rpg-x-axis">
+        <div class="rpg-x-axis-labels">${xAxisLabelTemplates}</div>
+      </div>
+    `;
     for (const item of yAxisValues) {
       yAxisLabelTemplates.push(html`
         <div class="rpg-axis-label" title=${item}>${item}</div>
       `);
     }
+    const yAxisTemplate = html`
+      <div class="rpg-y-axis">
+        <div class="rpg-y-axis-labels">${yAxisLabelTemplates}</div>
+        <div
+          class="rpg-y-axis-line-container"
+          tabindex="1"
+          role="slider"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow=${this._yAxisWidthPercentage}
+          aria-valuetext=${this._yAxisWidthDescription}
+          @dragstart=${noop}
+          @pointerdown=${this.onPointerDown}
+          @keydown=${this.onKeyDown}
+        >
+          <div class="rpg-y-axis-line"></div>
+        </div>
+      </div>
+    `;
 
     const gridlineTemplates = [];
     for (let i = 0; i < this._ticks.length - 1; i++) {
@@ -174,8 +229,7 @@ export class Rapidograph extends LitElement {
         const isPositive =
           this._allPositive || !this._allNegative ? value >= 0 : value > 0;
         const barSize = getSizeInPercentages(value, this._min, this._max);
-        const size =
-          this.orientation === Orientation.Vertical ? "height" : "width";
+        const size = isVertical ? "height" : "width";
 
         barTemplates.push(
           html`<div
@@ -195,25 +249,16 @@ export class Rapidograph extends LitElement {
         );
       }
     }
-    // TODO: --rpg-x-axis-height
+
     return html`
       <div class="rpg" theme=${this.theme}>
         <div
           class=${classMap(this._wrapperClasses)}
-          style="
-            ${SCROLLBAR_WIDTH_CSS_VAR}: ${this._scrollbarWidth}px;
-            ${Y_AXIS_WIDTH_CSS_VAR}: ${this._yAxisWidth}px;
-            --rpg-x-axis-height: 31.666667938232422px;
-          "
+          style=${styleMap(this._wrapperStyles)}
         >
-          <div
-            class="rpg-scrollable"
-            style="--rpg-labels-length: 14; --rpg-ticks-length: 5;"
-          >
+          <div class="rpg-scrollable">
             <div class="rpg-scrollable-content">
-              <div class="rpg-x-axis">
-                <div class="rpg-x-axis-labels">${xAxisLabelTemplates}</div>
-              </div>
+              ${isVertical ? xAxisTemplate : yAxisTemplate}
               <div class="rpg-content-container">
                 <div class="rpg-gridlines">${gridlineTemplates}</div>
                 <div class=${classMap(this._barContainerClasses)} role="list">
@@ -222,23 +267,7 @@ export class Rapidograph extends LitElement {
               </div>
             </div>
           </div>
-          <div class="rpg-y-axis">
-            <div class="rpg-y-axis-labels">${yAxisLabelTemplates}</div>
-            <div
-              class="rpg-y-axis-line-container"
-              tabindex="1"
-              role="slider"
-              aria-valuemin="0"
-              aria-valuemax="100"
-              aria-valuenow=${this._yAxisWidthPercentage}
-              aria-valuetext=${this._yAxisWidthDescription}
-              @dragstart=${noop}
-              @pointerdown=${this.onPointerDown}
-              @keydown=${this.onKeyDown}
-            >
-              <div class="rpg-y-axis-line"></div>
-            </div>
-          </div>
+          ${isVertical ? yAxisTemplate : xAxisTemplate}
         </div>
       </div>
       <div aria-live="polite">${this._yAxisWidthDescription}</div>

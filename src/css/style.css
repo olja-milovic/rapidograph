@@ -7,6 +7,7 @@
 	--light-gridline-color--: color-mix(in srgb, var(--gridline-color--) 50%, transparent);
 
 	--transition-colors--: background-color cubic-bezier(0.4, 0, 0.2, 1) 100ms;
+	--transition-opacity--: opacity cubic-bezier(0.4, 0, 0.2, 1) 100ms;
 	--bar-label-offset--: calc(100% + 0.188rem);
 }
 
@@ -53,7 +54,7 @@
 			margin-right: 1rem;
 			height: 100%;
 			grid-template-columns: repeat(
-        var(--rpg-labels-length, 0),
+        var(--rpg-data-length, 0),
         minmax(2.5rem, 1fr)
       );
 
@@ -93,7 +94,7 @@
 			margin-left: 1rem;
 			margin-right: 1rem;
 			grid-template-columns: repeat(
-        var(--rpg-labels-length, 0),
+        var(--rpg-data-length, 0),
         minmax(1.5rem, 1fr)
       );
 		}
@@ -146,9 +147,7 @@
 			}
 
 			.rpg-y-axis {
-				margin-bottom: calc(
-								var(--rpg-x-axis-height, 0) + var(--rpg-scrollbar-width, 0)
-				);
+				margin-bottom: calc(var(--rpg-x-axis-height, 0) + var(--rpg-scrollbar-width, 0));
 			}
 		}
 
@@ -204,7 +203,7 @@
 			margin-bottom: 1rem;
 			gap: 1rem;
 			grid-template-rows: repeat(
-        var(--rpg-labels-length, 0),
+        var(--rpg-data-length, 0),
         minmax(1.5rem, 1fr)
       );
 
@@ -256,11 +255,11 @@
 			display: grid;
 			align-items: center;
 			gap: 1rem;
-			grid-template-rows: repeat(var(--rpg-labels-length, 0), minmax(0, 1fr));
+			grid-template-rows: repeat(var(--rpg-data-length, 0), minmax(0, 1fr));
 		}
 
 		.rpg-gridlines {
-			grid-template-columns: repeat(calc(var(--rpg-ticks-length, 1) - 1), 1fr);
+			grid-template-columns: repeat(calc(var(--rpg-ticks-length, 5) - 1), 1fr);
 		}
 
 		.rpg-gridline {
@@ -347,7 +346,7 @@
 
 	&.x-axis-top {
 		.rpg-x-axis {
-			border-bottom: solid 2px var(--gridline-color--);
+			border-bottom: solid 1.5px var(--gridline-color--);
 		}
 
 		.rpg-x-axis-labels {
@@ -387,7 +386,7 @@
 		}
 	}
 
-	&.labels-no {
+	&.labels-never {
 		.rpg-bar-label {
 			display: none;
 		}
@@ -401,7 +400,7 @@
 		.rpg-bar-label,
 		.rpg-small-bar-label {
 			.rpg-bar:not(:hover) & {
-				display: none;
+				opacity: 0;
 			}
 		}
 	}
@@ -471,6 +470,7 @@
 	font-family: inherit;
 	line-height: 1;
 	color: var(--bar-label-color--);
+	transition: var(--transition-opacity--);
 }
 
 .rpg-small-bar-label {
@@ -480,6 +480,7 @@
 	font-size: 0.75rem;
 	font-weight: 500;
 	color: var(--bar-label-color--);
+	transition: var(--transition-opacity--);
 }
 
 .rpg-x-axis {

@@ -124,13 +124,18 @@ export function calculateYAxisWidths(
     ["max", MAX_Y_AXIS_WIDTH],
   ]);
 
-  if (values.length) {
+  if (values.length && !!textSizeDiv && !!wrapper && !!yAxis) {
     // reset width when values change so that the new one is calculated correctly
     yAxis.style.removeProperty("width");
 
-    const sortedValues = [...values].sort(
-      (a, b) => b.toString().length - a.toString().length,
-    );
+    const sortedValues = [...values].sort((a, b) => {
+      const strA = a.toString();
+      const strB = b.toString();
+      if (strB.length !== strA.length) {
+        return strB.length - strA.length;
+      }
+      return strB.localeCompare(strA);
+    });
     const longestLabelWidth = getTextWidth(
       textSizeDiv,
       sortedValues[0]!.toString(),
@@ -139,11 +144,6 @@ export function calculateYAxisWidths(
     let newWidth = longestLabelWidth + Y_AXIS_LINE_WIDTH + 6;
     result.set("min", Math.min(newWidth, MIN_Y_AXIS_WIDTH));
     result.set("max", Math.max(newWidth, MAX_Y_AXIS_WIDTH));
-
-    // TODO: works if labels are loaded beforehand
-    // let offsetWidth = Math.ceil(
-    //   (yAxis.getBoundingClientRect()?.width ?? 0) + 1,
-    // );
 
     if (newWidth > DEFAULT_Y_AXIS_WIDTH) {
       newWidth = DEFAULT_Y_AXIS_WIDTH;
