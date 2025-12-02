@@ -35,6 +35,8 @@ import {
 } from "./constants.ts";
 import styles from "./css/style.css?inline";
 
+import "./components/tooltip.ts";
+
 @customElement("rapido-graph")
 export class Rapidograph extends LitElement {
   static get styles() {
@@ -245,6 +247,7 @@ export class Rapidograph extends LitElement {
               <div class="rpg-bar-label">${value}</div>
               <div class="rpg-small-bar-label">${value}</div>
             </div>
+            <tool-tip theme=${this.tooltipTheme}></tool-tip>
           </div>`,
         );
       }

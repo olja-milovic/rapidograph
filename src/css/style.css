@@ -11,6 +11,10 @@
 	--bar-label-offset--: calc(100% + 0.188rem);
 }
 
+:has(> tool-tip) {
+	position: relative;
+}
+
 /*TODO: check if https://developer.mozilla.org/en-US/docs/Web/CSS/color-scheme can be used*/
 .rpg {
 	height: 100%;

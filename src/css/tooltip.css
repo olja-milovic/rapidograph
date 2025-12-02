@@ -1,0 +1,108 @@
+:host {
+	--_bg-color: #1d2125;
+	--_text-color: #eff1f3;
+	--_padding: 0.75rem;
+	--_text-align: start;
+	--_inset: calc(100% + var(--_padding));
+	--isRTL: -1;
+
+	pointer-events: none;
+	user-select: none;
+	opacity: 0;
+	transform: translateX(var(--_x, 0)) translateY(var(--_y, 0));
+
+	position: absolute;
+	z-index: 2;
+	inline-size: max-content;
+	/* TODO: not sure if ok size */
+	max-inline-size: 25ch;
+	font-size: 0.813rem;
+	font-weight: normal;
+	line-height: initial;
+	margin: 0;
+	border-radius: 0.375rem;
+	text-align: var(--_text-align);
+	padding: var(--_padding);
+	background: var(--_bg-color);
+	color: var(--_text-color);
+	will-change: filter;
+	filter: drop-shadow(0 0 3px hsl(0 0% 0% / var(--_shadow-alpha))) drop-shadow(0 0 12px hsl(0 0% 0% / var(--_shadow-alpha)));
+
+	&:dir(rtl) {
+		--isRTL: 1;
+	}
+
+	/* for screen readers */
+
+	&::before {
+		content: attr(data-content);
+		clip: rect(1px, 1px, 1px, 1px);
+		clip-path: inset(50%);
+		height: 1px;
+		width: 1px;
+		margin: -1px;
+		overflow: hidden;
+		padding: 0;
+		position: absolute;
+	}
+
+	.rpg-tooltip-wrapper {
+		display: flex;
+		flex-direction: column;
+		row-gap: 0.5rem;
+
+		.rpg-tooltip-label {
+			font-weight: 400;
+		}
+
+		.rpg-tooltip-value {
+			font-weight: 600;
+			font-size: 1.25rem;
+		}
+	}
+}
+
+:host([theme="light"]) {
+  --_bg-color: white;
+  --_text-color: #232529;
+  --_shadow-alpha: 15%;
+}
+
+@media (prefers-color-scheme: light) {
+  :host:not([theme]) {
+    --_bg-color: white;
+    --_text-color: black;
+    --_shadow-alpha: 15%;
+  }
+}
+
+:host:not([position]),
+:host([position="top"]),
+:host([position="bottom"]) {
+  inset-inline-start: 50%;
+  --_x: calc(50% * var(--isRTL));
+}
+
+:host([position="top"]),
+:host:not([position]) {
+  inset-block-end: var(--_inset);
+}
+
+:host([position="bottom"]) {
+  inset-block-start: var(--_inset);
+}
+
+:host:not([position]),
+:host([position="left"]),
+:host([position="right"]) {
+  inset-block-end: 50%;
+  --_y: 50%;
+}
+
+:host([position="left"]) {
+  inset-inline-end: var(--_inset);
+}
+
+:host([position="right"]) {
+  inset-inline-start: var(--_inset);
+}
