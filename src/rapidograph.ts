@@ -3,6 +3,7 @@ import { customElement, property, query, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { styleMap } from "lit/directives/style-map.js";
 
+import "./templates/x-axis.ts";
 import {
   type DataItem,
   Orientation,
@@ -177,20 +178,11 @@ export class Rapidograph extends LitElement {
 
   render() {
     const isVertical = this.orientation === Orientation.Vertical;
-    const xAxisLabelTemplates = [];
     const yAxisLabelTemplates = [];
-    const xAxisValues = isVertical ? this._labels : this._ticks;
     const yAxisValues = isVertical ? this._ticks : this._labels;
 
-    for (const item of xAxisValues) {
-      xAxisLabelTemplates.push(html`
-        <div class="rpg-axis-label" title=${item}>${item}</div>
-      `);
-    }
     const xAxisTemplate = html`
-      <div class="rpg-x-axis">
-        <div class="rpg-x-axis-labels">${xAxisLabelTemplates}</div>
-      </div>
+      <x-axis .values=${isVertical ? this._labels : this._ticks}></x-axis>
     `;
     for (const item of yAxisValues) {
       yAxisLabelTemplates.push(html`
