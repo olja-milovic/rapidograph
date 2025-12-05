@@ -63,7 +63,6 @@ export class Rapidobar extends LitElement {
   private _allPositive: boolean = true;
   private _allNegative: boolean = false;
   private _yAxisMinWidth: number = MIN_Y_AXIS_WIDTH;
-  private _yAxisWidth: number = DEFAULT_Y_AXIS_WIDTH;
   private _yAxisMaxWidth: number = MAX_Y_AXIS_WIDTH;
   private _vObserver: IntersectionObserver | undefined;
   private _hObserver: IntersectionObserver | undefined;
@@ -84,6 +83,8 @@ export class Rapidobar extends LitElement {
   private _scrollbarSize: number = 0;
   @state()
   private _activeBarIndex: number = -1;
+  @state()
+  private _yAxisWidth: number = DEFAULT_Y_AXIS_WIDTH;
 
   @property({ type: Array, attribute: false })
   get data(): DataItem[] {
@@ -144,6 +145,7 @@ export class Rapidobar extends LitElement {
   private get _wrapperStyles() {
     return {
       [SCROLLBAR_WIDTH_CSS_VAR]: `${this._scrollbarSize}px`,
+      [Y_AXIS_WIDTH_CSS_VAR]: `${this._yAxisWidth}px`,
       [X_AXIS_HEIGHT_CSS_VAR]: `${this._xAxisHeight}px`,
       [DATA_LENGTH_CSS_VAR]: this._values.length,
     };
@@ -213,7 +215,7 @@ export class Rapidobar extends LitElement {
         <div class="rpg-y-axis-labels">${yAxisLabelTemplates}</div>
         <div
           class="rpg-y-axis-line-container"
-          tabindex="1"
+          tabindex=${this.yAxisPosition === YAxisPosition.Left ? "1" : "0"}
           role="slider"
           aria-valuemin="0"
           aria-valuemax="100"
@@ -377,8 +379,6 @@ export class Rapidobar extends LitElement {
   }
 
   private onYAxisKeyDown(event: KeyboardEvent): void {
-    event.preventDefault();
-
     const percentage = parseInt(this._yAxisWidthPercentage ?? "0", 10);
     const key = event.key;
     const isLeftAxis = this.yAxisPosition === YAxisPosition.Left;
@@ -389,12 +389,14 @@ export class Rapidobar extends LitElement {
     };
 
     if (key === (isLeftAxis ? "ArrowLeft" : "ArrowRight")) {
+      event.preventDefault();
       this._yAxisWidth =
         getUpdatedYAxisWidth({
           ...commonArgs,
           widthPercentage: Math.max(percentage - 5, 0),
         }) ?? this._yAxisWidth;
     } else if (key === (isLeftAxis ? "ArrowRight" : "ArrowLeft")) {
+      event.preventDefault();
       this._yAxisWidth =
         getUpdatedYAxisWidth({
           ...commonArgs,
