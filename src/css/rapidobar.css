@@ -6,41 +6,45 @@
 	--gridline-color--: var(--rpg-gridline-color, #b3b9c4);
 	--light-gridline-color--: color-mix(in srgb, var(--gridline-color--) 50%, transparent);
 
+	/*dark color scheme*/
+	--bar-color-dark--: var(--rpg-bar-color-dark, #0055cc);
+	--bar-bg-color-dark--: var(--rpg-bar-bg-color-dark, #1d212580);
+	--bar-color-hover-dark--: var(--rpg-bar-color-hover-dark, #0c65e3);
+	--bar-label-color-dark--: var(--rpg-bar-label-color-dark, #eff1f3);
+	--gridline-color-dark--: var(--rpg-gridline-color-dark, #596773);
+
 	--transition-colors--: background-color cubic-bezier(0.4, 0, 0.2, 1) 100ms;
 	--transition-opacity--: opacity cubic-bezier(0.4, 0, 0.2, 1) 100ms;
 	--bar-label-offset--: calc(100% + 0.188rem);
+
+	height: 100%;
+	font-optical-sizing: auto;
+}
+
+:host([theme="dark"]) {
+	--bar-color--: var(--bar-color-dark--);
+	--bar-bg-color--: var(--bar-bg-color-dark--);
+	--bar-color-hover--: var(--bar-color-hover-dark--);
+	--bar-label-color--: var(--bar-label-color-dark--);
+	--gridline-color--: var(--gridline-color-dark--);
+}
+
+@media (prefers-color-scheme: dark) {
+	:host(:not([theme])) {
+		--bar-color--: var(--bar-color-dark--);
+		--bar-bg-color--: var(--bar-bg-color-dark--);
+		--bar-color-hover--: var(--bar-color-hover-dark--);
+		--bar-label-color--: var(--bar-label-color-dark--);
+		--gridline-color--: var(--gridline-color-dark--);
+	}
 }
 
 :has(> tool-tip) {
 	position: relative;
 }
 
-/*TODO: check if https://developer.mozilla.org/en-US/docs/Web/CSS/color-scheme can be used*/
-.rpg {
-	height: 100%;
-	font-optical-sizing: auto;
-
-	&[theme="dark"] {
-		--bar-color--: var(--rpg-bar-color-dark, #0055cc);
-		--bar-bg-color--: var(--rpg-bar-bg-color-dark, #1d212580);
-		--bar-color-hover--: var(--rpg-bar-color-hover-dark, #0c65e3);
-		--bar-label-color--: var(--rpg-bar-label-color-dark, #eff1f3);
-		--gridline-color--: var(--rpg-gridline-color-dark, #596773);
-	}
-
-	@media (prefers-color-scheme: dark) {
-		&:not([theme]) {
-			--bar-color--: var(--rpg-bar-color-dark, #0055cc);
-			--bar-bg-color--: var(--rpg-bar-bg-color-dark, #1d212580);
-			--bar-color-hover--: var(--rpg-bar-color-hover-dark, #0c65e3);
-			--bar-label-color--: var(--rpg-bar-label-color-dark, #eff1f3);
-			--gridline-color--: var(--rpg-gridline-color-dark, #596773);
-		}
-	}
-}
-
 /*WRAPPER STYLES: including custom styling per component with different settings*/
-.rpg-wrapper {
+.rpg {
 	display: grid;
 	height: 100%;
 	width: 100%;
@@ -215,8 +219,6 @@
 				grid-template-columns: repeat(2, minmax(0, 1fr));
 
 				.rpg-bar-content {
-					margin-right: 1px;
-
 					.positive & {
 						grid-column-start: 2;
 					}

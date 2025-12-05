@@ -32,3 +32,10 @@ export enum ShowLabels {
   Never = "never",
   Hover = "hover",
 }
+
+export enum TooltipPosition {
+  Left = "left",
+  Right = "right",
+  Top = "top",
+  Bottom = "bottom",
+}

@@ -10,11 +10,11 @@
       href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
       rel="stylesheet"
     />
-    <script type="module" src="/src/rapidograph.ts"></script>
+    <script type="module" src="/src/components/rapidobar.ts"></script>
 
     <script>
       window.onload = function () {
-        const rapidograph = document.querySelector("rapido-graph");
+        const rapidograph = document.querySelector("rapido-bar");
         rapidograph.data = [
           {"Jan 2023": 1},
           {"Feb 2023": 0},
@@ -35,12 +35,12 @@
     </script>
   </head>
   <body style="height: 400px; padding: 1rem; font-family: 'Inter', sans-serif;">
-    <rapido-graph
-      orientation="horizontal"
+    <rapido-bar
+      orientation="vertical"
       xAxisPosition="bottom"
       yAxisPosition="left"
       theme="light"
       showLabels="always"
-    ></rapido-graph>
+    ></rapido-bar>
   </body>
 </html>

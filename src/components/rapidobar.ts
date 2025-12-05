@@ -1,4 +1,11 @@
-import { LitElement, type PropertyValues, css, html, unsafeCSS } from "lit";
+import {
+  LitElement,
+  type PropertyValues,
+  css,
+  html,
+  nothing,
+  unsafeCSS,
+} from "lit";
 import { customElement, property, query, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { styleMap } from "lit/directives/style-map.js";
@@ -10,18 +17,18 @@ import {
   Theme,
   XAxisPosition,
   YAxisPosition,
-} from "./types";
+} from "../types";
 import {
   calculateYAxisWidths,
   checkIfAllPositiveOrNegative,
   checkIfSomePositiveAndNegative,
   generateTicks,
-  getMinAndMax,
-  getScrollbarWidth,
+  getMinAndMaxInPercentages,
+  getScrollbarSize,
   getSizeInPercentages,
   getUpdatedYAxisWidth,
   noop,
-} from "./utils";
+} from "../utils";
 
 // "?inline" makes Vite import CSS as a string instead of injecting it globally
 import {
@@ -32,13 +39,13 @@ import {
   SCROLLBAR_WIDTH_CSS_VAR,
   X_AXIS_HEIGHT_CSS_VAR,
   Y_AXIS_WIDTH_CSS_VAR,
-} from "./constants.ts";
-import styles from "./css/style.css?inline";
+} from "../constants.ts";
+import styles from "../css/rapidobar.css?inline";
 
-import "./components/tooltip.ts";
+import "./tooltip.ts";
 
-@customElement("rapido-graph")
-export class Rapidograph extends LitElement {
+@customElement("rapido-bar")
+export class Rapidobar extends LitElement {
   static get styles() {
     return css`
       ${unsafeCSS(styles)}
@@ -49,13 +56,14 @@ export class Rapidograph extends LitElement {
   private _labels: string[] = [];
   private _values: number[] = [];
   private _ticks: number[] = [];
-  private _min: number = 0;
-  private _max: number = 100;
+  private _minBarSize: number = 0;
+  private _maxBarSize: number = 100;
   private _hasPositive: boolean = true;
-  private _hasNegative: boolean = true;
+  private _hasNegative: boolean = false;
   private _allPositive: boolean = true;
-  private _allNegative: boolean = true;
+  private _allNegative: boolean = false;
   private _yAxisMinWidth: number = MIN_Y_AXIS_WIDTH;
+  private _yAxisWidth: number = DEFAULT_Y_AXIS_WIDTH;
   private _yAxisMaxWidth: number = MAX_Y_AXIS_WIDTH;
   private _vObserver: IntersectionObserver | undefined;
   private _hObserver: IntersectionObserver | undefined;
@@ -73,9 +81,9 @@ export class Rapidograph extends LitElement {
   @state()
   private _xAxisHeight: number = 0;
   @state()
-  private _yAxisWidth: number = DEFAULT_Y_AXIS_WIDTH;
+  private _scrollbarSize: number = 0;
   @state()
-  private _scrollbarWidth: number = 0;
+  private _activeBarIndex: number = -1;
 
   @property({ type: Array, attribute: false })
   get data(): DataItem[] {
@@ -94,8 +102,10 @@ export class Rapidograph extends LitElement {
       }
     }
 
-    this._ticks = generateTicks(this._values);
-    [this._min, this._max] = getMinAndMax(this._values, 5);
+    [this._minBarSize, this._maxBarSize] = getMinAndMaxInPercentages(
+      this._values,
+    );
+    this._ticks = generateTicks(this._minBarSize, this._maxBarSize);
     [this._hasPositive, this._hasNegative] = checkIfSomePositiveAndNegative(
       this._values,
     );
@@ -124,7 +134,7 @@ export class Rapidograph extends LitElement {
 
   private get _wrapperClasses() {
     return {
-      "rpg-wrapper": true,
+      rpg: true,
       [this.orientation]: true,
       [`x-axis-${this.xAxisPosition}`]: true,
       [`y-axis-${this.yAxisPosition}`]: true,
@@ -133,8 +143,7 @@ export class Rapidograph extends LitElement {
   }
   private get _wrapperStyles() {
     return {
-      [SCROLLBAR_WIDTH_CSS_VAR]: `${this._scrollbarWidth}px`,
-      [Y_AXIS_WIDTH_CSS_VAR]: `${this._yAxisWidth}px`,
+      [SCROLLBAR_WIDTH_CSS_VAR]: `${this._scrollbarSize}px`,
       [X_AXIS_HEIGHT_CSS_VAR]: `${this._xAxisHeight}px`,
       [DATA_LENGTH_CSS_VAR]: this._values.length,
     };
@@ -146,7 +155,7 @@ export class Rapidograph extends LitElement {
     };
   }
 
-  @query(".rpg-wrapper")
+  @query(".rpg")
   wrapper!: HTMLElement;
   @query(".rpg-scrollable")
   scrollableElem!: HTMLElement;
@@ -211,8 +220,8 @@ export class Rapidograph extends LitElement {
           aria-valuenow=${this._yAxisWidthPercentage}
           aria-valuetext=${this._yAxisWidthDescription}
           @dragstart=${noop}
-          @pointerdown=${this.onPointerDown}
-          @keydown=${this.onKeyDown}
+          @pointerdown=${this.onYAxisPointerDown}
+          @keydown=${this.onYAxisKeyDown}
         >
           <div class="rpg-y-axis-line"></div>
         </div>
@@ -225,13 +234,19 @@ export class Rapidograph extends LitElement {
     }
 
     const barTemplates = [];
-    for (const item of this.data) {
+    for (const [index, item] of this.data.entries()) {
       for (const label in item) {
         const value = item[label];
         const isPositive =
           this._allPositive || !this._allNegative ? value >= 0 : value > 0;
-        const barSize = getSizeInPercentages(value, this._min, this._max);
+        const barSize = getSizeInPercentages(
+          value,
+          this._minBarSize,
+          this._maxBarSize,
+        );
         const size = isVertical ? "height" : "width";
+        const onEnter = () => (this._activeBarIndex = index);
+        const onLeave = () => (this._activeBarIndex = -1);
 
         barTemplates.push(
           html`<div
@@ -239,6 +254,10 @@ export class Rapidograph extends LitElement {
             aria-label="${label}: ${value}"
             role="listitem"
             tabindex="0"
+            @mouseenter=${onEnter}
+            @mouseleave=${onLeave}
+            @focusin=${onEnter}
+            @focusout=${onLeave}
           >
             <div
               class="rpg-bar-content"
@@ -247,31 +266,37 @@ export class Rapidograph extends LitElement {
               <div class="rpg-bar-label">${value}</div>
               <div class="rpg-small-bar-label">${value}</div>
             </div>
-            <tool-tip theme=${this.tooltipTheme}></tool-tip>
+            ${this._activeBarIndex === index
+              ? html`<tool-tip
+                  orientation=${this.orientation}
+                  theme=${this.tooltipTheme}
+                  label=${label}
+                  value=${value}
+                  .scrollableElem=${this.scrollableElem}
+                ></tool-tip>`
+              : nothing}
           </div>`,
         );
       }
     }
 
     return html`
-      <div class="rpg" theme=${this.theme}>
-        <div
-          class=${classMap(this._wrapperClasses)}
-          style=${styleMap(this._wrapperStyles)}
-        >
-          <div class="rpg-scrollable">
-            <div class="rpg-scrollable-content">
-              ${isVertical ? xAxisTemplate : yAxisTemplate}
-              <div class="rpg-content-container">
-                <div class="rpg-gridlines">${gridlineTemplates}</div>
-                <div class=${classMap(this._barContainerClasses)} role="list">
-                  ${barTemplates}
-                </div>
+      <div
+        class=${classMap(this._wrapperClasses)}
+        style=${styleMap(this._wrapperStyles)}
+      >
+        <div class="rpg-scrollable">
+          <div class="rpg-scrollable-content">
+            ${isVertical ? xAxisTemplate : yAxisTemplate}
+            <div class="rpg-content-container">
+              <div class="rpg-gridlines">${gridlineTemplates}</div>
+              <div class=${classMap(this._barContainerClasses)} role="list">
+                ${barTemplates}
               </div>
             </div>
           </div>
-          ${isVertical ? yAxisTemplate : xAxisTemplate}
         </div>
+        ${isVertical ? yAxisTemplate : xAxisTemplate}
       </div>
       <div aria-live="polite">${this._yAxisWidthDescription}</div>
       <div id="rpg-get-text-width" class="rpg-axis-label"></div>
@@ -288,48 +313,26 @@ export class Rapidograph extends LitElement {
       root: this.scrollableElem,
       threshold: 1,
     };
-    const verticalOptions = {
-      rootMargin: "0px -16px",
-    };
-    const horizontalOptions = {
-      rootMargin: "-16px 0px",
-    };
 
     const callback = () => {
-      this._scrollbarWidth = getScrollbarWidth(
+      this._scrollbarSize = getScrollbarSize(
         this.orientation,
         this.scrollableElem,
       );
     };
     this._vObserver = new IntersectionObserver(callback, {
       ...options,
-      ...verticalOptions,
+      rootMargin: "0px -16px",
     });
     this._hObserver = new IntersectionObserver(callback, {
       ...options,
-      ...horizontalOptions,
+      rootMargin: "-16px 0px",
     });
-
     this._vObserver.observe(this.barContainer);
     this._hObserver.observe(this.barContainer);
-
-    // this.vTooltipObserver = new IntersectionObserver(
-    //   (entries) => positionTooltip(this.orientation, entries),
-    //   {
-    //     ...options,
-    //     ...verticalOptions,
-    //   },
-    // );
-    // this.hTooltipObserver = new IntersectionObserver(
-    //   (entries) => positionTooltip(this.orientation, entries),
-    //   {
-    //     ...options,
-    //     ...horizontalOptions,
-    //   },
-    // );
   }
 
-  private onPointerDown(pointerDownEvent: PointerEvent) {
+  private onYAxisPointerDown(pointerDownEvent: PointerEvent) {
     pointerDownEvent.preventDefault();
     let newWidth = this._yAxisWidth;
     const self = this;
@@ -373,32 +376,31 @@ export class Rapidograph extends LitElement {
     window.addEventListener("pointerup", handlePointerUp);
   }
 
-  private onKeyDown(event: KeyboardEvent): void {
+  private onYAxisKeyDown(event: KeyboardEvent): void {
+    event.preventDefault();
+
     const percentage = parseInt(this._yAxisWidthPercentage ?? "0", 10);
     const key = event.key;
-    const minimizeKey =
-      this.yAxisPosition === YAxisPosition.Left ? "ArrowLeft" : "ArrowRight";
-    const maximizeKey =
-      this.yAxisPosition === YAxisPosition.Left ? "ArrowRight" : "ArrowLeft";
+    const isLeftAxis = this.yAxisPosition === YAxisPosition.Left;
+    const commonArgs = {
+      currentPercentage: percentage,
+      minWidth: this._yAxisMinWidth,
+      maxWidth: this._yAxisMaxWidth,
+    };
 
-    if (key === minimizeKey) {
+    if (key === (isLeftAxis ? "ArrowLeft" : "ArrowRight")) {
       this._yAxisWidth =
-        getUpdatedYAxisWidth(
-          percentage,
-          this._yAxisMinWidth,
-          this._yAxisMaxWidth,
-          Math.max(percentage - 5, 0),
-        ) ?? this._yAxisWidth;
-    } else if (key === maximizeKey) {
+        getUpdatedYAxisWidth({
+          ...commonArgs,
+          widthPercentage: Math.max(percentage - 5, 0),
+        }) ?? this._yAxisWidth;
+    } else if (key === (isLeftAxis ? "ArrowRight" : "ArrowLeft")) {
       this._yAxisWidth =
-        getUpdatedYAxisWidth(
-          percentage,
-          this._yAxisMinWidth,
-          this._yAxisMaxWidth,
-          Math.min(percentage + 5, 100),
-        ) ?? this._yAxisWidth;
+        getUpdatedYAxisWidth({
+          ...commonArgs,
+          widthPercentage: Math.min(percentage + 5, 100),
+        }) ?? this._yAxisWidth;
     }
-    event.preventDefault();
   }
 
   disconnectedCallback(): void {
@@ -409,6 +411,6 @@ export class Rapidograph extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    rapidograph: Rapidograph;
+    rapidograph: Rapidobar;
   }
 }

@@ -10,6 +10,11 @@ import { Orientation } from "../types";
 
 export function noop() {}
 
+/**
+ * Checks whether the dataset contains both positive and negative values.
+ * @param {number[]} values - Array of numeric values to analyze.
+ * @returns {[boolean, boolean]} Both true if at least one value is positive and one is negative.
+ */
 export function checkIfSomePositiveAndNegative(
   values: number[] = [],
 ): [boolean, boolean] {
@@ -18,6 +23,11 @@ export function checkIfSomePositiveAndNegative(
   return [hasPositive, hasNegative];
 }
 
+/**
+ * Checks whether all values in the dataset are either entirely positive or entirely negative.
+ * @param {number[]} values - Array of numeric values to check.
+ * @returns {[boolean, boolean]} Both true if all values have the same sign (all >= 0 or all <= 0).
+ */
 export function checkIfAllPositiveOrNegative(
   values: number[] = [],
 ): [boolean, boolean] {
@@ -26,36 +36,53 @@ export function checkIfAllPositiveOrNegative(
   return [allPositive, allNegative];
 }
 
-export function getMinAndMax(
+/**
+ * Computes the minimum and maximum values from the dataset
+ * and returns them expressed as percentages.
+ * @param {number[]} values - Array of numeric values.
+ * @param {number} numOfTicks - Number of ticks for y-axis.
+ * @returns {[number, number]} Min and max values in percentage form (0–100).
+ */
+// TODO: number of ticks should be calculated dynamically for small values
+export function getMinAndMaxInPercentages(
   values: number[] = [],
-  noOfTicks = 2,
+  numOfTicks: number = 5,
 ): [number, number] {
   const [hasPositive, hasNegative] = checkIfSomePositiveAndNegative(values);
 
   // TODO: check if correct
   // calculate the next positive value divisible by the number of ticks
   const maxValue = Math.abs(
-    (noOfTicks - 1) *
+    (numOfTicks - 1) *
       Math.ceil(
         Math.max(
           ...values.map((value) => Math.round(Math.abs(value) * 10) / 10),
         ) /
-          (noOfTicks - 1),
+          (numOfTicks - 1),
       ),
   );
 
   return [hasNegative ? -Math.abs(maxValue) : 0, hasPositive ? maxValue : 0];
 }
 
+/**
+ * Generates a list of tick values for the y-axis based on
+ * all the values and desired tick count.
+ * @param {number} min - Minimum bar value.
+ * @param {number} max - Maximum bar value.
+ * @param {number} numOfTicks - Number of ticks for y-axis.
+ * @param {number} decimals - Desired number of decimal places.
+ * @returns {number[]} An array of tick values evenly distributed across the range.
+ */
 export function generateTicks(
-  values: number[] = [],
-  ticks = 5,
-  decimals = 1,
+  min: number = 0,
+  max: number = 100,
+  numOfTicks: number = 5,
+  decimals: number = 1,
 ): number[] {
-  const [min = 0, max = 100] = getMinAndMax(values, ticks);
-  const interval = (max - min) / (ticks - 1);
+  const interval = (max - min) / (numOfTicks - 1);
 
-  const tickValues = Array.from({ length: ticks - 1 }, (_, i) => i).reduce(
+  const tickValues = Array.from({ length: numOfTicks - 1 }, (_, i) => i).reduce(
     (acc, tick) => {
       // TODO (olja): revisit logic, acc.length should always be > 0
       if (!acc.length) {
@@ -72,7 +99,18 @@ export function generateTicks(
   return tickValues.map((value) => Math.round(value * power) / power);
 }
 
-export function getSizeInPercentages(value = 0, min = 0, max = 100) {
+/**
+ * Converts a given numeric value into a percentage of a reference size.
+ * @param {number} value - The value to convert.
+ * @param {number} min - Minimum value.
+ * @param {number} max - Maximum value.
+ * @returns {number} The value expressed as a percentage of the total.
+ */
+export function getSizeInPercentages(
+  value: number = 0,
+  min: number = 0,
+  max: number = 100,
+): number {
   if (value > 0) {
     return (value * 100) / max;
   }
@@ -82,7 +120,14 @@ export function getSizeInPercentages(value = 0, min = 0, max = 100) {
   return 0;
 }
 
-export function getScrollbarWidth(
+/**
+ * Calculates the size of the browser's scrollbar.
+ * Useful for layout adjustments when dragging y-axis.
+ * @param {Orientation} orientation - Chart orientation.
+ * @param {HTMLElement} scrollableElement - Chart element that can be scrolled.
+ * @returns {number} The scrollbar size in pixels.
+ */
+export function getScrollbarSize(
   orientation: Orientation,
   scrollableElement: HTMLElement,
 ): number {
@@ -96,6 +141,12 @@ export function getScrollbarWidth(
   return width;
 }
 
+/**
+ * Measures the rendered width of a given text string in a specific font.
+ * @param {HTMLElement} textSizeDiv - Existing element used to measure text size.
+ * @param {string} text - The text to measure.
+ * @returns {number} The width of the text in pixels.
+ */
 export function getTextWidth(
   textSizeDiv: HTMLElement,
   text: string = "",
@@ -112,6 +163,15 @@ export function getTextWidth(
   return width;
 }
 
+/**
+ * Calculates the width of the y-axis based on label content,
+ * label formatting, tick labels, and any additional spacing.
+ * @param {HTMLElement} textSizeDiv - Existing element used to measure text size.
+ * @param {HTMLElement} wrapper - Chart wrapper element.
+ * @param {HTMLElement} yAxis - Y-axis element.
+ * @param {(string | number)[]} values - Either ticks or labels depending on the orientation.
+ * @returns {number} Y-axis width in pixels.
+ */
 export function calculateYAxisWidths(
   textSizeDiv: HTMLElement,
   wrapper: HTMLElement,
@@ -160,12 +220,26 @@ export function calculateYAxisWidths(
   return Array.from(result.values());
 }
 
-export function getUpdatedYAxisWidth(
-  currentPercentage: number = 0,
+/**
+ * Returns the new y-axis width based on min, max and current width in percentages.
+ * @param {Object} params - Configuration options.
+ * @param {number} [params.currentPercentage=0] - Previously applied y-axis width (in %).
+ * @param {number} [params.minWidth=0] - Minimum allowed width (in #).
+ * @param {number} [params.maxWidth=100] - Maximum allowed width (in #).
+ * @param {number} params.widthPercentage - Newly calculated required width (in %).
+ * @returns {number | null} Updated y-axis width in pixels or null if current and new are the same.
+ */
+export function getUpdatedYAxisWidth({
+  currentPercentage = 0,
   minWidth = 0,
   maxWidth = 100,
-  widthPercentage: number,
-): number | null {
+  widthPercentage,
+}: {
+  currentPercentage?: number;
+  minWidth?: number;
+  maxWidth?: number;
+  widthPercentage: number;
+}): number | null {
   if (currentPercentage === widthPercentage) {
     return null;
   }
