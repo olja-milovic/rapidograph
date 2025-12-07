@@ -64,6 +64,7 @@ export class Rapidobar extends LitElement {
   private _allNegative: boolean = false;
   private _yAxisMinWidth: number = MIN_Y_AXIS_WIDTH;
   private _yAxisMaxWidth: number = MAX_Y_AXIS_WIDTH;
+  private _isDraggingYAxis: boolean = false;
   private _vObserver: IntersectionObserver | undefined;
   private _hObserver: IntersectionObserver | undefined;
 
@@ -96,13 +97,16 @@ export class Rapidobar extends LitElement {
     this._data = value;
     this.requestUpdate("data", oldValue);
 
+    const values = [];
+    const labels = [];
     for (const item of this.data) {
       for (const label in item) {
-        this._values.push(item[label]);
-        this._labels.push(label);
+        values.push(item[label]);
+        labels.push(label);
       }
     }
 
+    [this._values, this._labels] = [values, labels];
     [this._minBarSize, this._maxBarSize] = getMinAndMaxInPercentages(
       this._values,
     );
@@ -116,7 +120,7 @@ export class Rapidobar extends LitElement {
   }
 
   @property({ type: Orientation })
-  orientation = Orientation.Vertical;
+  orientation: Orientation = Orientation.Vertical;
 
   @property({ type: XAxisPosition })
   xAxisPosition = XAxisPosition.Bottom;
@@ -158,35 +162,17 @@ export class Rapidobar extends LitElement {
   }
 
   @query(".rpg")
-  wrapper!: HTMLElement;
+  private _wrapper!: HTMLElement;
   @query(".rpg-scrollable")
-  scrollableElem!: HTMLElement;
+  private _scrollableElem!: HTMLElement;
   @query(".rpg-bar-container")
-  barContainer!: HTMLElement;
+  private _barContainer!: HTMLElement;
   @query(".rpg-x-axis")
-  xAxis!: HTMLElement;
+  private _xAxis!: HTMLElement;
   @query(".rpg-y-axis")
-  yAxis!: HTMLElement;
+  private _yAxis!: HTMLElement;
   @query("#rpg-get-text-width")
-  textSizeDiv!: HTMLElement;
-
-  updated(changedProperties: Map<string, never>) {
-    if (this.xAxis) {
-      this._xAxisHeight = this.xAxis.getBoundingClientRect().height ?? 1 - 1;
-    }
-
-    if (changedProperties.get("orientation") || changedProperties.get("data")) {
-      [this._yAxisMinWidth, this._yAxisWidth, this._yAxisMaxWidth] =
-        calculateYAxisWidths(
-          this.textSizeDiv,
-          this.wrapper,
-          this.yAxis,
-          this.orientation === Orientation.Vertical
-            ? this._ticks
-            : this._labels,
-        );
-    }
-  }
+  private _textSizeDiv!: HTMLElement;
 
   render() {
     const isVertical = this.orientation === Orientation.Vertical;
@@ -247,7 +233,12 @@ export class Rapidobar extends LitElement {
           this._maxBarSize,
         );
         const size = isVertical ? "height" : "width";
-        const onEnter = () => (this._activeBarIndex = index);
+        const onEnter = () => {
+          if (this._isDraggingYAxis) {
+            return;
+          }
+          this._activeBarIndex = index;
+        };
         const onLeave = () => (this._activeBarIndex = -1);
 
         barTemplates.push(
@@ -274,7 +265,7 @@ export class Rapidobar extends LitElement {
                   theme=${this.tooltipTheme}
                   label=${label}
                   value=${value}
-                  .scrollableElem=${this.scrollableElem}
+                  .scrollableElem=${this._scrollableElem}
                 ></tool-tip>`
               : nothing}
           </div>`,
@@ -307,19 +298,41 @@ export class Rapidobar extends LitElement {
 
   protected firstUpdated(_changedProperties: PropertyValues): void {
     super.firstUpdated(_changedProperties);
+    [this._yAxisMinWidth, this._yAxisWidth, this._yAxisMaxWidth] =
+      this._calculateYAxisWidths();
     this.addObservers();
+  }
+
+  updated(changedProperties: Map<string, never>) {
+    if (this._xAxis) {
+      this._xAxisHeight = this._xAxis.getBoundingClientRect().height ?? 1 - 1;
+    }
+
+    if (changedProperties.get("orientation") || changedProperties.get("data")) {
+      [this._yAxisMinWidth, this._yAxisWidth, this._yAxisMaxWidth] =
+        this._calculateYAxisWidths();
+    }
+  }
+
+  private _calculateYAxisWidths(): number[] {
+    return calculateYAxisWidths(
+      this._textSizeDiv,
+      this._wrapper,
+      this._yAxis,
+      this.orientation === Orientation.Vertical ? this._ticks : this._labels,
+    );
   }
 
   private addObservers() {
     const options = {
-      root: this.scrollableElem,
+      root: this._scrollableElem,
       threshold: 1,
     };
 
     const callback = () => {
       this._scrollbarSize = getScrollbarSize(
         this.orientation,
-        this.scrollableElem,
+        this._scrollableElem,
       );
     };
     this._vObserver = new IntersectionObserver(callback, {
@@ -330,17 +343,19 @@ export class Rapidobar extends LitElement {
       ...options,
       rootMargin: "-16px 0px",
     });
-    this._vObserver.observe(this.barContainer);
-    this._hObserver.observe(this.barContainer);
+    this._vObserver.observe(this._barContainer);
+    this._hObserver.observe(this._barContainer);
   }
 
   private onYAxisPointerDown(pointerDownEvent: PointerEvent) {
     pointerDownEvent.preventDefault();
+    this._isDraggingYAxis = true;
+
     let newWidth = this._yAxisWidth;
     const self = this;
 
     const handlePointerMove = (pointerMoveEvent: PointerEvent) => {
-      const parent = self.wrapper;
+      const parent = self._wrapper;
 
       const moveClientX = pointerMoveEvent.clientX;
       const downClientX = pointerDownEvent.clientX;
@@ -363,11 +378,12 @@ export class Rapidobar extends LitElement {
       if (newWidth > allowedMaxWidth) {
         newWidth = allowedMaxWidth;
       }
-      this.wrapper.style.setProperty(Y_AXIS_WIDTH_CSS_VAR, `${newWidth}px`);
+      this._wrapper.style.setProperty(Y_AXIS_WIDTH_CSS_VAR, `${newWidth}px`);
     };
 
     function handlePointerUp(): void {
       self._yAxisWidth = newWidth;
+      self._isDraggingYAxis = false;
       document.body.style.removeProperty("cursor");
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
@@ -406,8 +422,8 @@ export class Rapidobar extends LitElement {
   }
 
   disconnectedCallback(): void {
-    this._vObserver?.unobserve(this.barContainer);
-    this._hObserver?.unobserve(this.barContainer);
+    this._vObserver?.unobserve(this._barContainer);
+    this._hObserver?.unobserve(this._barContainer);
   }
 }
 

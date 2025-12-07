@@ -1,0 +1,9 @@
+.container {
+  height: 400px;
+  padding: 1.5rem;
+  border-radius: 1rem;
+}
+
+.container.dark {
+  background-color: #292a2e;
+}
