@@ -560,6 +560,10 @@
 	width: 100%;
 }
 
+.rpg-empty-state {
+	font-size: 0.813rem;
+}
+
 [aria-live="polite"] {
 	display: none;
 }

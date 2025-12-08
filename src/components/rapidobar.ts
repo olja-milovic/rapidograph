@@ -284,7 +284,9 @@ export class Rapidobar extends LitElement {
             <div class="rpg-content-container">
               <div class="rpg-gridlines">${gridlineTemplates}</div>
               <div class=${classMap(this._barContainerClasses)} role="list">
-                ${barTemplates}
+                ${this.data.length
+                  ? barTemplates
+                  : html`<div class="rpg-empty-state">No data</div>`}
               </div>
             </div>
           </div>
@@ -298,6 +300,10 @@ export class Rapidobar extends LitElement {
 
   protected firstUpdated(_changedProperties: PropertyValues): void {
     super.firstUpdated(_changedProperties);
+    if (!this.data.length) {
+      return;
+    }
+
     [this._yAxisMinWidth, this._yAxisWidth, this._yAxisMaxWidth] =
       this._calculateYAxisWidths();
     this.addObservers();
