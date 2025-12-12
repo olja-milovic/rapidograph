@@ -9,6 +9,9 @@ import {
 import { Orientation } from "../types";
 
 export function noop() {}
+export function echo(value: string | number): string | number {
+  return value;
+}
 
 /**
  * Checks whether the dataset contains both positive and negative values.
@@ -34,6 +37,18 @@ export function checkIfAllPositiveOrNegative(
   const allPositive = values.every((value) => value >= 0);
   const allNegative = values.every((value) => value <= 0);
   return [allPositive, allNegative];
+}
+
+/**
+ * Use axis formatter if it exists, or return the original axis label.
+ * @param {string} label - Axis label
+ * @param [formatter=echo] - Axis label formatter
+ */
+export function formatAxisLabel(
+  label: string | number,
+  formatter = echo,
+): string | number {
+  return formatter(label);
 }
 
 /**
@@ -170,6 +185,7 @@ export function getTextWidth(
  * @param {HTMLElement} wrapper - Chart wrapper element.
  * @param {HTMLElement} yAxis - Y-axis element.
  * @param {(string | number)[]} values - Either ticks or labels depending on the orientation.
+ * @param formatter - Axis label formatter.
  * @returns {number} Y-axis width in pixels.
  */
 export function calculateYAxisWidths(
@@ -177,6 +193,7 @@ export function calculateYAxisWidths(
   wrapper: HTMLElement,
   yAxis: HTMLElement,
   values: (string | number)[] = [],
+  formatter: (value: number | string) => string | number = echo,
 ): number[] {
   const result = new Map<string, number>([
     ["min", MIN_Y_AXIS_WIDTH],
@@ -198,9 +215,9 @@ export function calculateYAxisWidths(
     });
     const longestLabelWidth = getTextWidth(
       textSizeDiv,
-      sortedValues[0]!.toString(),
+      formatter(sortedValues[0]).toString(),
     );
-    // margin 4px + 2px to avoid ellipsis = 6
+    // margin 8px + 2px to avoid ellipsis = 6
     let newWidth = longestLabelWidth + Y_AXIS_LINE_WIDTH + 6;
     result.set("min", Math.min(newWidth, MIN_Y_AXIS_WIDTH));
     result.set("max", Math.max(newWidth, MAX_Y_AXIS_WIDTH));

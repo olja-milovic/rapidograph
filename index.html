@@ -16,28 +16,35 @@
       window.onload = function () {
         const rapidograph = document.querySelector("rapido-bar");
         rapidograph.data = [
-          {"Jan 2023": 1},
-          {"Feb 2023": 0},
-          {"Mar 2023": 3},
-          {"Apr 2023": -12},
-          {"May 2023": -6},
-          {"Jun 2023": -10},
-          {"Jul 2023": 5},
-          {"Jan 2023": 1},
-          {"Feb 2023": 0},
-          {"Mar 2023": 12},
-          {"Apr 2023": -12},
-          {"May 2023": -1},
-          {"Jun 2023": -10},
-          {"Jul 2023": 5},
+          {category: "Jan 2023", value: 1},
+          {category: "Feb 2023", value: 0},
+          {category: "Mar 2023", value: 3},
+          {category: "Apr 2023", value: -12},
+          {category: "May 2023", value: -6},
+          {category: "Jun 2023", value: -10},
+          {category: "Jul 2023", value: 5},
+          {category: "Jan 2023", value: 1},
+          {category: "Feb 2023", value: 0},
+          {category: "Mar 2023", value: 12},
+          {category: "Apr 2023", value: -12},
+          {category: "May 2023", value: -1},
+          {category: "Jun 2023", value: -10},
+          {category: "Jul 2023", value: 5},
         ];
+        rapidograph.categoryAxis = {
+          label: "Month",
+        };
+        rapidograph.valueAxis = {
+          label: "Number (%)",
+          formatter: val => `${val}%`,
+        };
       }
     </script>
   </head>
   <body style="height: 400px; padding: 1rem; font-family: 'Inter', sans-serif;">
     <rapido-bar
       orientation="vertical"
-      xAxisPosition="bottom"
+      xAxisPosition="top"
       yAxisPosition="left"
       theme="light"
       showLabels="always"

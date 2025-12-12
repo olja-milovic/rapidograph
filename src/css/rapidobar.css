@@ -3,6 +3,7 @@
 	--bar-bg-color--: var(--rpg-bar-bg-color, #f7f8f980);
 	--bar-color-hover--: var(--rpg-bar-color-hover, #579cff);
 	--bar-label-color--: var(--rpg-bar-label-color, #232529);
+	--axis-title-bg-color--: var(--rpg-axis-title-color, white);
 	--gridline-color--: var(--rpg-gridline-color, #b3b9c4);
 	--light-gridline-color--: color-mix(in srgb, var(--gridline-color--) 50%, transparent);
 
@@ -11,6 +12,7 @@
 	--bar-bg-color-dark--: var(--rpg-bar-bg-color-dark, #1d212580);
 	--bar-color-hover-dark--: var(--rpg-bar-color-hover-dark, #0c65e3);
 	--bar-label-color-dark--: var(--rpg-bar-label-color-dark, #eff1f3);
+	--axis-title-bg-color-dark--: var(--rpg-axis-title-color-dark, #292a2e);
 	--gridline-color-dark--: var(--rpg-gridline-color-dark, #596773);
 
 	--transition-colors--: background-color cubic-bezier(0.4, 0, 0.2, 1) 100ms;
@@ -26,6 +28,7 @@
 	--bar-bg-color--: var(--bar-bg-color-dark--);
 	--bar-color-hover--: var(--bar-color-hover-dark--);
 	--bar-label-color--: var(--bar-label-color-dark--);
+	--axis-title-bg-color--: var(--axis-title-bg-color-dark--);
 	--gridline-color--: var(--gridline-color-dark--);
 }
 
@@ -35,6 +38,7 @@
 		--bar-bg-color--: var(--bar-bg-color-dark--);
 		--bar-color-hover--: var(--bar-color-hover-dark--);
 		--bar-label-color--: var(--bar-label-color-dark--);
+		--axis-title-bg-color--: var(--axis-title-bg-color-dark--);
 		--gridline-color--: var(--gridline-color-dark--);
 	}
 }
@@ -96,6 +100,14 @@
 			justify-content: center;
 		}
 
+		.rpg-x-axis .rpg-axis-title-content {
+			padding: 0;
+			text-shadow: 0 1px 0 var(--axis-title-bg-color--),
+			0 -1px 0 var(--axis-title-bg-color--),
+			1px 0 0 var(--axis-title-bg-color--),
+			-1px 0 0 var(--axis-title-bg-color--);
+		}
+
 		.rpg-x-axis-labels {
 			display: grid;
 			text-align: center;
@@ -112,6 +124,10 @@
 			margin-bottom: -0.5rem;
 			display: flex;
 			justify-content: space-between;
+		}
+
+		.rpg-y-axis-line-container .rpg-axis-title {
+			height: 50%;
 		}
 
 		.rpg-gridline {
@@ -246,6 +262,10 @@
 			width: fit-content;
 			height: 100%;
 			align-items: center;
+		}
+
+		.rpg-x-axis .rpg-axis-title-content {
+			margin-left: calc(var(--rpg-y-axis-width, 0) / 2);
 		}
 
 		.rpg-x-axis-labels {
@@ -490,7 +510,16 @@
 }
 
 .rpg-x-axis {
+	position: relative;
 	z-index: 1;
+
+	.rpg-axis-title {
+		left: 50%;
+	}
+
+	.rpg-axis-title-content {
+		translate: -50% calc(-50% - 1px);
+	}
 }
 
 .rpg-x-axis-labels {
@@ -504,8 +533,14 @@
 	display: flex;
 	justify-content: end;
 
-	&:has(.rpg-y-axis-labels:hover) .rpg-y-axis-line {
-		background-color: var(--bar-color--);
+	&:has(.rpg-y-axis-labels:hover) {
+		.rpg-y-axis-line {
+			background-color: var(--bar-color--);
+		}
+
+		.rpg-axis-title-content {
+			color: var(--bar-color-hover--);
+		}
 	}
 }
 
@@ -514,11 +549,11 @@
 	flex: 1;
 	flex-direction: column-reverse;
 	text-align: right;
-	color: var(--bar-label-color--);
 }
 
 .rpg-y-axis-line-container {
-	width: 1rem;
+	position: relative;
+	width: 1.5rem;
 	display: flex;
 	justify-content: center;
 
@@ -533,6 +568,19 @@
 		.rpg-y-axis-line {
 			background-color: var(--bar-color--);
 		}
+
+		.rpg-axis-title-content {
+			color: var(--bar-color-hover--);
+		}
+	}
+
+	.rpg-axis-title {
+		top: 50%;
+	}
+
+	.rpg-axis-title-content {
+		translate: calc(-50% + 1px) -50%;
+		transform: rotate(-90deg);
 	}
 }
 
@@ -551,6 +599,26 @@
 	white-space: nowrap;
 	font-size: 0.813rem;
 	margin: 0 0.125rem;
+	line-height: 1;
+	color: var(--bar-label-color--);
+	transition: var(--transition-colors--);
+}
+
+.rpg-axis-title {
+	font-size: 0.75rem;
+	position: sticky;
+	width: fit-content;
+	height: fit-content;
+	overflow: inherit;
+	margin: 0;
+}
+
+.rpg-axis-title-content {
+	position: absolute;
+	height: auto;
+	width: auto;
+	padding: 1px 0.125rem;
+	background-color: var(--axis-title-bg-color--);
 }
 
 .rpg-gridlines {

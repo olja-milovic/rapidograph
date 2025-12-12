@@ -1,16 +1,6 @@
+import "./tooltip.ts";
 import {
-  LitElement,
-  type PropertyValues,
-  css,
-  html,
-  nothing,
-  unsafeCSS,
-} from "lit";
-import { customElement, property, query, state } from "lit/decorators.js";
-import { classMap } from "lit/directives/class-map.js";
-import { styleMap } from "lit/directives/style-map.js";
-
-import {
+  type AxisConfig,
   type DataItem,
   Orientation,
   ShowLabels,
@@ -18,19 +8,6 @@ import {
   XAxisPosition,
   YAxisPosition,
 } from "../types";
-import {
-  calculateYAxisWidths,
-  checkIfAllPositiveOrNegative,
-  checkIfSomePositiveAndNegative,
-  generateTicks,
-  getMinAndMaxInPercentages,
-  getScrollbarSize,
-  getSizeInPercentages,
-  getUpdatedYAxisWidth,
-  noop,
-} from "../utils";
-
-// "?inline" makes Vite import CSS as a string instead of injecting it globally
 import {
   DATA_LENGTH_CSS_VAR,
   DEFAULT_Y_AXIS_WIDTH,
@@ -40,9 +17,31 @@ import {
   X_AXIS_HEIGHT_CSS_VAR,
   Y_AXIS_WIDTH_CSS_VAR,
 } from "../constants.ts";
+import {
+  LitElement,
+  type PropertyValues,
+  css,
+  html,
+  nothing,
+  unsafeCSS,
+} from "lit";
+import {
+  calculateYAxisWidths,
+  checkIfAllPositiveOrNegative,
+  checkIfSomePositiveAndNegative,
+  formatAxisLabel,
+  generateTicks,
+  getMinAndMaxInPercentages,
+  getScrollbarSize,
+  getSizeInPercentages,
+  getUpdatedYAxisWidth,
+  noop,
+} from "../utils";
+import { customElement, property, query, state } from "lit/decorators.js";
+import { classMap } from "lit/directives/class-map.js";
+import { styleMap } from "lit/directives/style-map.js";
+// "?inline" makes Vite import CSS as a string instead of injecting it globally
 import styles from "../css/rapidobar.css?inline";
-
-import "./tooltip.ts";
 
 @customElement("rapido-bar")
 export class Rapidobar extends LitElement {
@@ -53,7 +52,7 @@ export class Rapidobar extends LitElement {
   }
 
   private _data: DataItem[] = [];
-  private _labels: string[] = [];
+  private _categories: string[] = [];
   private _values: number[] = [];
   private _ticks: number[] = [];
   private _minBarSize: number = 0;
@@ -97,16 +96,14 @@ export class Rapidobar extends LitElement {
     this._data = value;
     this.requestUpdate("data", oldValue);
 
-    const values = [];
-    const labels = [];
-    for (const item of this.data) {
-      for (const label in item) {
-        values.push(item[label]);
-        labels.push(label);
-      }
-    }
-
-    [this._values, this._labels] = [values, labels];
+    const length = this._data.length;
+    const categories = new Array<string>(length);
+    const values = new Array<number>(length);
+    this.data.forEach(({ category, value }, index) => {
+      categories[index] = category;
+      values[index] = value;
+    });
+    [this._categories, this._values] = [categories, values];
     [this._minBarSize, this._maxBarSize] = getMinAndMaxInPercentages(
       this._values,
     );
@@ -118,6 +115,12 @@ export class Rapidobar extends LitElement {
       this._values,
     );
   }
+
+  @property({ type: Object })
+  categoryAxis: AxisConfig = { label: "" };
+
+  @property({ type: Object })
+  valueAxis: AxisConfig = { label: "" };
 
   @property({ type: Orientation })
   orientation: Orientation = Orientation.Vertical;
@@ -178,22 +181,31 @@ export class Rapidobar extends LitElement {
     const isVertical = this.orientation === Orientation.Vertical;
     const xAxisLabelTemplates = [];
     const yAxisLabelTemplates = [];
-    const xAxisValues = isVertical ? this._labels : this._ticks;
-    const yAxisValues = isVertical ? this._ticks : this._labels;
+    const xAxisValues = isVertical ? this._categories : this._ticks;
+    const yAxisValues = isVertical ? this._ticks : this._categories;
+    const xAxisConfig = isVertical ? this.categoryAxis : this.valueAxis;
+    const yAxisConfig = isVertical ? this.valueAxis : this.categoryAxis;
 
     for (const item of xAxisValues) {
+      const label = formatAxisLabel(item, xAxisConfig.formatter);
       xAxisLabelTemplates.push(html`
-        <div class="rpg-axis-label" title=${item}>${item}</div>
+        <div class="rpg-axis-label" title=${label}>${label}</div>
       `);
     }
     const xAxisTemplate = html`
       <div class="rpg-x-axis">
+        ${xAxisConfig.label
+          ? html`<div class="rpg-axis-label rpg-axis-title">
+              <div class="rpg-axis-title-content">${xAxisConfig.label}</div>
+            </div>`
+          : nothing}
         <div class="rpg-x-axis-labels">${xAxisLabelTemplates}</div>
       </div>
     `;
     for (const item of yAxisValues) {
+      const label = formatAxisLabel(item, yAxisConfig.formatter);
       yAxisLabelTemplates.push(html`
-        <div class="rpg-axis-label" title=${item}>${item}</div>
+        <div class="rpg-axis-label" title=${label}>${label}</div>
       `);
     }
     const yAxisTemplate = html`
@@ -211,6 +223,11 @@ export class Rapidobar extends LitElement {
           @pointerdown=${this.onYAxisPointerDown}
           @keydown=${this.onYAxisKeyDown}
         >
+          ${yAxisConfig.label
+            ? html`<div class="rpg-axis-label rpg-axis-title">
+                <div class="rpg-axis-title-content">${yAxisConfig.label}</div>
+              </div>`
+            : nothing}
           <div class="rpg-y-axis-line"></div>
         </div>
       </div>
@@ -222,55 +239,49 @@ export class Rapidobar extends LitElement {
     }
 
     const barTemplates = [];
-    for (const [index, item] of this.data.entries()) {
-      for (const label in item) {
-        const value = item[label];
-        const isPositive =
-          this._allPositive || !this._allNegative ? value >= 0 : value > 0;
-        const barSize = getSizeInPercentages(
-          value,
-          this._minBarSize,
-          this._maxBarSize,
-        );
-        const size = isVertical ? "height" : "width";
-        const onEnter = () => {
-          if (this._isDraggingYAxis) {
-            return;
-          }
-          this._activeBarIndex = index;
-        };
-        const onLeave = () => (this._activeBarIndex = -1);
+    for (const [index, { category, value }] of this.data.entries()) {
+      const isPositive =
+        this._allPositive || !this._allNegative ? value >= 0 : value > 0;
+      const barSize = getSizeInPercentages(
+        value,
+        this._minBarSize,
+        this._maxBarSize,
+      );
+      const size = isVertical ? "height" : "width";
+      const onEnter = () => {
+        if (this._isDraggingYAxis) {
+          return;
+        }
+        this._activeBarIndex = index;
+      };
+      const onLeave = () => (this._activeBarIndex = -1);
 
-        barTemplates.push(
-          html`<div
-            class="rpg-bar ${isPositive ? "positive" : "negative"}"
-            aria-label="${label}: ${value}"
-            role="listitem"
-            tabindex="0"
-            @mouseenter=${onEnter}
-            @mouseleave=${onLeave}
-            @focusin=${onEnter}
-            @focusout=${onLeave}
-          >
-            <div
-              class="rpg-bar-content"
-              style="${size}: ${Math.abs(barSize)}%;"
-            >
-              <div class="rpg-bar-label">${value}</div>
-              <div class="rpg-small-bar-label">${value}</div>
-            </div>
-            ${this._activeBarIndex === index
-              ? html`<tool-tip
-                  orientation=${this.orientation}
-                  theme=${this.tooltipTheme}
-                  label=${label}
-                  value=${value}
-                  .scrollableElem=${this._scrollableElem}
-                ></tool-tip>`
-              : nothing}
-          </div>`,
-        );
-      }
+      barTemplates.push(
+        html`<div
+          class="rpg-bar ${isPositive ? "positive" : "negative"}"
+          aria-label="${category}: ${value}"
+          role="listitem"
+          tabindex="0"
+          @mouseenter=${onEnter}
+          @mouseleave=${onLeave}
+          @focusin=${onEnter}
+          @focusout=${onLeave}
+        >
+          <div class="rpg-bar-content" style="${size}: ${Math.abs(barSize)}%;">
+            <div class="rpg-bar-label">${value}</div>
+            <div class="rpg-small-bar-label">${value}</div>
+          </div>
+          ${this._activeBarIndex === index
+            ? html`<tool-tip
+                orientation=${this.orientation}
+                theme=${this.tooltipTheme}
+                label=${category}
+                value=${value}
+                .scrollableElem=${this._scrollableElem}
+              ></tool-tip>`
+            : nothing}
+        </div>`,
+      );
     }
 
     return html`
@@ -300,9 +311,6 @@ export class Rapidobar extends LitElement {
 
   protected firstUpdated(_changedProperties: PropertyValues): void {
     super.firstUpdated(_changedProperties);
-    if (!this.data.length) {
-      return;
-    }
 
     [this._yAxisMinWidth, this._yAxisWidth, this._yAxisMaxWidth] =
       this._calculateYAxisWidths();
@@ -321,11 +329,13 @@ export class Rapidobar extends LitElement {
   }
 
   private _calculateYAxisWidths(): number[] {
+    const isVertical = this.orientation === Orientation.Vertical;
     return calculateYAxisWidths(
       this._textSizeDiv,
       this._wrapper,
       this._yAxis,
-      this.orientation === Orientation.Vertical ? this._ticks : this._labels,
+      isVertical ? this._ticks : this._categories,
+      isVertical ? this.valueAxis.formatter : this.categoryAxis.formatter,
     );
   }
 

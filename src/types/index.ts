@@ -1,2 +1,2 @@
 export * from "./enums";
-export type { DataItem, YAxisWidths } from "./types";
+export type { DataItem, AxisConfig } from "./types";
