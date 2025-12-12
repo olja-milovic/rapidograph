@@ -373,6 +373,10 @@
 	&.x-axis-top {
 		.rpg-x-axis {
 			border-bottom: solid 1.5px var(--gridline-color--);
+
+			.rpg-axis-title-content {
+				translate: -50% calc(200% - 1px);
+			}
 		}
 
 		.rpg-x-axis-labels {
@@ -385,6 +389,10 @@
 	&.x-axis-bottom {
 		.rpg-x-axis {
 			border-top: solid 1.5px var(--gridline-color--);
+
+			.rpg-axis-title-content {
+				translate: -50% calc(-50% - 1px);
+			}
 		}
 
 		.rpg-x-axis-labels {
@@ -398,6 +406,10 @@
 		.rpg-y-axis-labels {
 			text-align: right;
 		}
+
+		.rpg-y-axis .rpg-axis-title-content {
+			transform: rotate(-90deg);
+		}
 	}
 
 	/*RIGHT Y-AXIS*/
@@ -405,6 +417,10 @@
 	&.y-axis-right {
 		.rpg-y-axis {
 			flex-direction: row-reverse;
+
+			.rpg-axis-title-content {
+				transform: rotate(90deg);
+			}
 		}
 
 		.rpg-y-axis-labels {
@@ -516,10 +532,6 @@
 	.rpg-axis-title {
 		left: 50%;
 	}
-
-	.rpg-axis-title-content {
-		translate: -50% calc(-50% - 1px);
-	}
 }
 
 .rpg-x-axis-labels {
@@ -580,7 +592,6 @@
 
 	.rpg-axis-title-content {
 		translate: calc(-50% + 1px) -50%;
-		transform: rotate(-90deg);
 	}
 }
 

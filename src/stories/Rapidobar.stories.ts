@@ -44,6 +44,24 @@ const meta = {
       options: Object.values(ShowLabels),
       description: "The way of showing labels on the bars",
     },
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
+    "categoryAxis.label": {
+      description: "Category axis label",
+      control: "text",
+      table: {
+        category: "AxisConfig",
+        type: { summary: "string" },
+      },
+    },
+    "categoryAxis.formatter": {
+      description: "Category axis formatter",
+      control: false,
+      table: {
+        category: "AxisConfig",
+        type: { summary: "(value) => string" },
+      },
+    },
     data: {
       control: "object",
       description: "The data for the bar chart",
@@ -56,21 +74,28 @@ const meta = {
     xAxisPosition: XAxisPosition.Bottom,
     tooltipTheme: Theme.Light,
     showLabels: ShowLabels.Always,
+    categoryAxis: {
+      label: "Month",
+    },
+    valueAxis: {
+      label: "Number (%)",
+      formatter: (val) => `${val}%`,
+    },
     data: [
-      { "Jan 2025": 1 },
-      { "Feb 2025": 0 },
-      { "Mar 2025": 3 },
-      { "Apr 2025": -12 },
-      { "May 2025": -6 },
-      { "Jun 2025": -10 },
-      { "Jul 2025": 5 },
-      { "Jan 2025": 1 },
-      { "Feb 2025": 0 },
-      { "Mar 2025": 12 },
-      { "Apr 2025": -12 },
-      { "May 2025": -1 },
-      { "Jun 2025": -10 },
-      { "Jul 2025": 5 },
+      { category: "Jan 2023", value: 1 },
+      { category: "Feb 2023", value: 0 },
+      { category: "Mar 2023", value: 3 },
+      { category: "Apr 2023", value: -12 },
+      { category: "May 2023", value: -6 },
+      { category: "Jun 2023", value: -10 },
+      { category: "Jul 2023", value: 5 },
+      { category: "Jan 2023", value: 1 },
+      { category: "Feb 2023", value: 0 },
+      { category: "Mar 2023", value: 12 },
+      { category: "Apr 2023", value: -12 },
+      { category: "May 2023", value: -1 },
+      { category: "Jun 2023", value: -10 },
+      { category: "Jul 2023", value: 5 },
     ],
   },
 } satisfies Meta<RapidobarProps>;
