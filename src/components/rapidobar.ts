@@ -37,7 +37,13 @@ import {
   getUpdatedYAxisWidth,
   noop,
 } from "../utils";
-import { customElement, property, query, state } from "lit/decorators.js";
+import {
+  customElement,
+  eventOptions,
+  property,
+  query,
+  state,
+} from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { styleMap } from "lit/directives/style-map.js";
 // "?inline" makes Vite import CSS as a string instead of injecting it globally
@@ -82,7 +88,7 @@ export class Rapidobar extends LitElement {
   @state()
   private _scrollbarSize: number = 0;
   @state()
-  private _activeBarIndex: number = -1;
+  private _activeBar: HTMLElement | null = null;
   @state()
   private _yAxisWidth: number = DEFAULT_Y_AXIS_WIDTH;
 
@@ -239,7 +245,7 @@ export class Rapidobar extends LitElement {
     }
 
     const barTemplates = [];
-    for (const [index, { category, value }] of this.data.entries()) {
+    for (const { category, value } of this.data) {
       const isPositive =
         this._allPositive || !this._allNegative ? value >= 0 : value > 0;
       const barSize = getSizeInPercentages(
@@ -248,13 +254,6 @@ export class Rapidobar extends LitElement {
         this._maxBarSize,
       );
       const size = isVertical ? "height" : "width";
-      const onEnter = () => {
-        if (this._isDraggingYAxis) {
-          return;
-        }
-        this._activeBarIndex = index;
-      };
-      const onLeave = () => (this._activeBarIndex = -1);
 
       barTemplates.push(
         html`<div
@@ -262,24 +261,13 @@ export class Rapidobar extends LitElement {
           aria-label="${category}: ${value}"
           role="listitem"
           tabindex="0"
-          @mouseenter=${onEnter}
-          @mouseleave=${onLeave}
-          @focusin=${onEnter}
-          @focusout=${onLeave}
+          data-category=${category}
+          data-value=${formatAxisLabel(value, this.valueAxis.formatter)}
         >
           <div class="rpg-bar-content" style="${size}: ${Math.abs(barSize)}%;">
             <div class="rpg-bar-label">${value}</div>
             <div class="rpg-small-bar-label">${value}</div>
           </div>
-          ${this._activeBarIndex === index
-            ? html`<tool-tip
-                orientation=${this.orientation}
-                theme=${this.tooltipTheme}
-                label=${category}
-                value=${value}
-                .scrollableElem=${this._scrollableElem}
-              ></tool-tip>`
-            : nothing}
         </div>`,
       );
     }
@@ -294,7 +282,14 @@ export class Rapidobar extends LitElement {
             ${isVertical ? xAxisTemplate : yAxisTemplate}
             <div class="rpg-content-container">
               <div class="rpg-gridlines">${gridlineTemplates}</div>
-              <div class=${classMap(this._barContainerClasses)} role="list">
+              <div
+                class=${classMap(this._barContainerClasses)}
+                role="list"
+                @mouseenter=${this.onBarEnter}
+                @mouseleave=${this.onBarContainerMouseLeave}
+                @focus=${this.onBarContainerFocus}
+                @blur=${this.onBarContainerFocusOut}
+              >
                 ${this.data.length
                   ? barTemplates
                   : html`<div class="rpg-empty-state">No data</div>`}
@@ -304,6 +299,12 @@ export class Rapidobar extends LitElement {
         </div>
         ${isVertical ? yAxisTemplate : xAxisTemplate}
       </div>
+      <tool-tip
+        .element=${this._isDraggingYAxis ? null : this._activeBar}
+        .container=${this._scrollableElem}
+        orientation=${this.orientation}
+        theme=${this.tooltipTheme}
+      ></tool-tip>
       <div aria-live="polite">${this._yAxisWidthDescription}</div>
       <div id="rpg-get-text-width" class="rpg-axis-label"></div>
     `;
@@ -361,6 +362,37 @@ export class Rapidobar extends LitElement {
     });
     this._vObserver.observe(this._barContainer);
     this._hObserver.observe(this._barContainer);
+  }
+
+  @eventOptions({ capture: true })
+  private onBarEnter(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (target.classList.contains("rpg-bar")) {
+      this._activeBar = target;
+    }
+  }
+
+  @eventOptions({ capture: true })
+  private onBarContainerMouseLeave(event: MouseEvent) {
+    if (event.target === event.currentTarget) {
+      this._activeBar = null;
+    }
+  }
+
+  @eventOptions({ capture: true })
+  private onBarContainerFocus(event: FocusEvent) {
+    this._activeBar = event.target as HTMLElement;
+  }
+
+  @eventOptions({ capture: true })
+  private onBarContainerFocusOut(event: FocusEvent) {
+    const nextFocused = event.relatedTarget as HTMLElement;
+    if (
+      !nextFocused ||
+      (nextFocused && !this._barContainer.contains(nextFocused))
+    ) {
+      this._activeBar = null;
+    }
   }
 
   private onYAxisPointerDown(pointerDownEvent: PointerEvent) {
@@ -438,6 +470,7 @@ export class Rapidobar extends LitElement {
   }
 
   disconnectedCallback(): void {
+    super.disconnectedCallback();
     this._vObserver?.unobserve(this._barContainer);
     this._hObserver?.unobserve(this._barContainer);
   }

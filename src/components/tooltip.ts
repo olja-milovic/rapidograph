@@ -1,7 +1,6 @@
-import { LitElement, type PropertyValues, css, html, unsafeCSS } from "lit";
-import { Orientation, Theme, TooltipPosition } from "../types";
+import { LitElement, css, html, unsafeCSS } from "lit";
+import { Orientation, Theme } from "../types";
 import { customElement, property, state } from "lit/decorators.js";
-import { positionTooltip } from "../utils";
 import styles from "../css/tooltip.css?inline";
 
 @customElement("tool-tip")
@@ -12,83 +11,87 @@ export class Tooltip extends LitElement {
     `;
   }
 
+  private _element: HTMLElement | null = null;
+
+  @state()
+  private _category: string = "Unknown";
+  @state()
+  private _value: string = "NaN";
+  @state()
+  private _x: number = 0;
+  @state()
+  private _y: number = 0;
+
+  @property({ type: HTMLElement, attribute: false })
+  get element(): HTMLElement | null {
+    return this._element;
+  }
+  set element(elem: HTMLElement) {
+    const hasElement = elem instanceof HTMLElement;
+
+    const element = hasElement ? elem : null;
+    this._element = element;
+
+    const { category, value } = element?.dataset || {};
+    this._category = category ?? "Unknown";
+    this._value = value ?? "NaN";
+
+    this.setAttribute("show", hasElement.toString());
+    this.setAttribute("data-content", `${this._category}: ${this._value}`);
+    this.moveTooltip();
+  }
+
   @property({ type: Orientation })
   orientation: Orientation = Orientation.Vertical;
 
   @property({ type: Theme })
   theme: Theme = Theme.Light;
 
-  @property({ type: String })
-  label: string = "";
-
-  @property({ type: Number })
-  value: number = 0;
-
   @property({ type: HTMLElement, attribute: false })
-  scrollableElem!: HTMLElement;
-
-  private _vObserver: IntersectionObserver | undefined;
-  private _hObserver: IntersectionObserver | undefined;
-
-  @state()
-  get position(): TooltipPosition {
-    return this.orientation === Orientation.Vertical
-      ? TooltipPosition.Right
-      : TooltipPosition.Bottom;
-  }
+  container!: HTMLElement;
 
   connectedCallback() {
     super.connectedCallback();
     this.setAttribute("inert", "");
     this.setAttribute("role", "tooltip");
-    this.setAttribute("data-content", `${this.label}: ${this.value}`);
-    this.setAttribute("position", this.position);
-  }
-
-  // TODO: check if needed
-  updated(changedProperties: Map<string, never>) {
-    if (changedProperties.get("position")) {
-      // this.setAttribute("position", this.position);
-    }
   }
 
   render() {
     return html`
       <div class="rpg-tooltip-wrapper">
-        <div class="rpg-tooltip-label">${this.label}</div>
-        <div class="rpg-tooltip-value">${this.value}</div>
+        <div class="rpg-tooltip-label">${this._category}</div>
+        <div class="rpg-tooltip-value">${this._value}</div>
       </div>
     `;
   }
 
-  protected firstUpdated(_changedProperties: PropertyValues): void {
-    super.firstUpdated(_changedProperties);
+  private async moveTooltip() {
+    if (!this.element) {
+      return;
+    }
+    // wait for category and value to be updated in the dom
+    await this.updateComplete;
 
-    const options = {
-      root: this.scrollableElem,
-      threshold: 1,
-    };
-    const verticalOptions = { ...options, rootMargin: "0px -16px" };
-    const horizontalOptions = { ...options, rootMargin: "-16px 0px" };
-
-    this._vObserver = new IntersectionObserver(
-      (entries) => positionTooltip(this.orientation, entries),
-      verticalOptions,
-    );
-    this._hObserver = new IntersectionObserver(
-      (entries) => positionTooltip(this.orientation, entries),
-      horizontalOptions,
-    );
+    const containerRect = this.container.getBoundingClientRect();
+    const elementRect = this.element.getBoundingClientRect();
+    const tooltipRect = this.getBoundingClientRect();
 
     if (this.orientation === Orientation.Vertical) {
-      this._vObserver?.observe(this);
+      this._x =
+        containerRect.right > elementRect.right + tooltipRect.width + 4
+          ? elementRect.right + 4
+          : elementRect.left - 4 - tooltipRect.width;
+      this._y =
+        elementRect.top + elementRect.height / 2 - tooltipRect.height / 2;
     } else {
-      this._hObserver?.observe(this);
+      this._x =
+        elementRect.left + elementRect.width / 2 - tooltipRect.width / 2;
+      this._y =
+        containerRect.bottom > elementRect.bottom + tooltipRect.height + 4
+          ? elementRect.bottom + 8
+          : elementRect.top - 8 - tooltipRect.height;
     }
-  }
-
-  disconnectedCallback(): void {
-    this._vObserver?.unobserve(this);
-    this._hObserver?.unobserve(this);
+    this.style.setProperty(`--x`, `${this._x}px`);
+    this.style.setProperty(`--y`, `${this._y}px`);
   }
 }
