@@ -1,695 +1,704 @@
 :host {
-	--bar-color--: var(--rpg-bar-color, #85b8ff);
-	--bar-bg-color--: var(--rpg-bar-bg-color, #f7f8f980);
-	--bar-color-hover--: var(--rpg-bar-color-hover, #579cff);
-	--bar-label-color--: var(--rpg-bar-label-color, #232529);
-	--axis-title-bg-color--: var(--rpg-axis-title-color, white);
-	--gridline-color--: var(--rpg-gridline-color, #b3b9c4);
-	--light-gridline-color--: color-mix(in srgb, var(--gridline-color--) 50%, transparent);
+  --bar-color--: var(--rpg-bar-color, #85b8ff);
+  --bar-bg-color--: var(--rpg-bar-bg-color, #f7f8f980);
+  --bar-color-hover--: var(--rpg-bar-color-hover, #579cff);
+  --bar-label-color--: var(--rpg-bar-label-color, #232529);
+  --axis-title-bg-color--: var(--rpg-axis-title-color, white);
+  --gridline-color--: var(--rpg-gridline-color, #b3b9c4);
+  --light-gridline-color--: color-mix(
+    in srgb,
+    var(--gridline-color--) 50%,
+    transparent
+  );
 
-	/*dark color scheme*/
-	--bar-color-dark--: var(--rpg-bar-color-dark, #0055cc);
-	--bar-bg-color-dark--: var(--rpg-bar-bg-color-dark, #1d212580);
-	--bar-color-hover-dark--: var(--rpg-bar-color-hover-dark, #0c65e3);
-	--bar-label-color-dark--: var(--rpg-bar-label-color-dark, #eff1f3);
-	--axis-title-bg-color-dark--: var(--rpg-axis-title-color-dark, #292a2e);
-	--gridline-color-dark--: var(--rpg-gridline-color-dark, #596773);
+  /*dark color scheme*/
+  --bar-color-dark--: var(--rpg-bar-color-dark, #0055cc);
+  --bar-bg-color-dark--: var(--rpg-bar-bg-color-dark, #1d212580);
+  --bar-color-hover-dark--: var(--rpg-bar-color-hover-dark, #0c65e3);
+  --bar-label-color-dark--: var(--rpg-bar-label-color-dark, #eff1f3);
+  --axis-title-bg-color-dark--: var(--rpg-axis-title-color-dark, #292a2e);
+  --gridline-color-dark--: var(--rpg-gridline-color-dark, #596773);
 
-	--transition-colors--: background-color cubic-bezier(0.4, 0, 0.2, 1) 100ms;
-	--transition-opacity--: opacity cubic-bezier(0.4, 0, 0.2, 1) 100ms;
-	--bar-label-offset--: calc(100% + 0.188rem);
+  --transition-colors--: background-color cubic-bezier(0.4, 0, 0.2, 1) 100ms;
+  --transition-opacity--: opacity cubic-bezier(0.4, 0, 0.2, 1) 100ms;
+  --bar-label-offset--: calc(100% + 0.188rem);
 
-	height: 100%;
-	font-optical-sizing: auto;
+  height: 100%;
+  font-optical-sizing: auto;
 }
 
 :host([theme="dark"]) {
-	--bar-color--: var(--bar-color-dark--);
-	--bar-bg-color--: var(--bar-bg-color-dark--);
-	--bar-color-hover--: var(--bar-color-hover-dark--);
-	--bar-label-color--: var(--bar-label-color-dark--);
-	--axis-title-bg-color--: var(--axis-title-bg-color-dark--);
-	--gridline-color--: var(--gridline-color-dark--);
+  --bar-color--: var(--bar-color-dark--);
+  --bar-bg-color--: var(--bar-bg-color-dark--);
+  --bar-color-hover--: var(--bar-color-hover-dark--);
+  --bar-label-color--: var(--bar-label-color-dark--);
+  --axis-title-bg-color--: var(--axis-title-bg-color-dark--);
+  --gridline-color--: var(--gridline-color-dark--);
 }
 
 @media (prefers-color-scheme: dark) {
-	:host(:not([theme])) {
-		--bar-color--: var(--bar-color-dark--);
-		--bar-bg-color--: var(--bar-bg-color-dark--);
-		--bar-color-hover--: var(--bar-color-hover-dark--);
-		--bar-label-color--: var(--bar-label-color-dark--);
-		--axis-title-bg-color--: var(--axis-title-bg-color-dark--);
-		--gridline-color--: var(--gridline-color-dark--);
-	}
+  :host(:not([theme])) {
+    --bar-color--: var(--bar-color-dark--);
+    --bar-bg-color--: var(--bar-bg-color-dark--);
+    --bar-color-hover--: var(--bar-color-hover-dark--);
+    --bar-label-color--: var(--bar-label-color-dark--);
+    --axis-title-bg-color--: var(--axis-title-bg-color-dark--);
+    --gridline-color--: var(--gridline-color-dark--);
+  }
 }
 
 :has(> tool-tip) {
-	position: relative;
+  position: relative;
 }
 
 /*WRAPPER STYLES: including custom styling per component with different settings*/
 .rpg {
-	display: grid;
-	height: 100%;
-	width: 100%;
+  display: grid;
+  height: 100%;
+  width: 100%;
 
-	/*VERTICAL ORIENTATION*/
+  /*VERTICAL ORIENTATION*/
 
-	&.vertical {
-		.rpg-scrollable {
-			overflow-x: auto;
-			overflow-y: hidden;
-		}
+  &.vertical {
+    .rpg-scrollable {
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
 
-		.rpg-bar-container {
-			margin-left: 1rem;
-			margin-right: 1rem;
-			height: 100%;
-			grid-template-columns: repeat(
+    .rpg-bar-container {
+      margin-left: 1rem;
+      margin-right: 1rem;
+      height: 100%;
+      grid-template-columns: repeat(
         var(--rpg-data-length, 0),
         minmax(2.5rem, 1fr)
       );
 
-			&.start-from-half .rpg-bar {
-				grid-template-rows: repeat(2, minmax(0, 1fr));
+      &.start-from-half .rpg-bar {
+        grid-template-rows: repeat(2, minmax(0, 1fr));
 
-				&.negative .rpg-bar-content {
-					grid-row-start: 2;
-				}
-			}
-		}
+        &.negative .rpg-bar-content {
+          grid-row-start: 2;
+        }
+      }
+    }
 
-		.rpg-bar {
-			max-width: 3.25rem;
-		}
+    .rpg-bar {
+      max-width: 3.25rem;
+    }
 
-		.rpg-bar-content {
-			width: 100%;
-			container: verticalBar / size;
-		}
+    .rpg-bar-content {
+      width: 100%;
+      container: verticalBar / size;
+    }
 
-		.rpg-bar-label {
-			margin-top: 3px;
-			margin-bottom: 3px;
-			height: fit-content;
-			width: 100%;
-		}
+    .rpg-bar-label {
+      margin-top: 3px;
+      margin-bottom: 3px;
+      height: fit-content;
+      width: 100%;
+    }
 
-		.rpg-small-bar-label {
-			width: 100%;
-			justify-content: center;
-		}
+    .rpg-small-bar-label {
+      width: 100%;
+      justify-content: center;
+    }
 
-		.rpg-x-axis .rpg-axis-title-content {
-			padding: 0;
-			text-shadow: 0 1px 0 var(--axis-title-bg-color--),
-			0 -1px 0 var(--axis-title-bg-color--),
-			1px 0 0 var(--axis-title-bg-color--),
-			-1px 0 0 var(--axis-title-bg-color--);
-		}
+    .rpg-x-axis .rpg-axis-title-content {
+      padding: 0;
+      text-shadow:
+        0 1px 0 var(--axis-title-bg-color--),
+        0 -1px 0 var(--axis-title-bg-color--),
+        1px 0 0 var(--axis-title-bg-color--),
+        -1px 0 0 var(--axis-title-bg-color--);
+    }
 
-		.rpg-x-axis-labels {
-			display: grid;
-			text-align: center;
-			margin-left: 1rem;
-			margin-right: 1rem;
-			grid-template-columns: repeat(
+    .rpg-x-axis-labels {
+      display: grid;
+      text-align: center;
+      margin-left: 1rem;
+      margin-right: 1rem;
+      grid-template-columns: repeat(
         var(--rpg-data-length, 0),
         minmax(1.5rem, 1fr)
       );
-		}
+    }
 
-		.rpg-y-axis-labels {
-			margin-top: -0.5rem;
-			margin-bottom: -0.5rem;
-			display: flex;
-			justify-content: space-between;
-		}
+    .rpg-y-axis-labels {
+      margin-top: -0.5rem;
+      margin-bottom: -0.5rem;
+      display: flex;
+      justify-content: space-between;
+    }
 
-		.rpg-y-axis-line-container .rpg-axis-title {
-			height: 50%;
-		}
+    .rpg-y-axis-line-container .rpg-axis-title {
+      height: 50%;
+    }
 
-		.rpg-gridline {
-			border-bottom: 1px solid var(--light-gridline-color--);
+    .rpg-gridline {
+      border-bottom: 1px solid var(--light-gridline-color--);
 
-			&:last-of-type {
-				border-bottom: 0;
-			}
-		}
+      &:last-of-type {
+        border-bottom: 0;
+      }
+    }
 
-		/*VERTICAL + TOP X-AXIS*/
+    /*VERTICAL + TOP X-AXIS*/
 
-		&.x-axis-top {
-			.rpg-scrollable-content {
-				grid-template-rows: auto 1fr;
-			}
+    &.x-axis-top {
+      .rpg-scrollable-content {
+        grid-template-rows: auto 1fr;
+      }
 
-			.rpg-content-container {
-				border-bottom: 1px solid var(--light-gridline-color--);
-			}
+      .rpg-content-container {
+        border-bottom: 1px solid var(--light-gridline-color--);
+      }
 
-			.rpg-y-axis {
-				margin-top: var(--rpg-x-axis-height, 0);
-				margin-bottom: var(--rpg-scrollbar-width, 0);
-			}
-		}
+      .rpg-y-axis {
+        margin-top: var(--rpg-x-axis-height, 0);
+        margin-bottom: var(--rpg-scrollbar-width, 0);
+      }
+    }
 
-		/*VERTICAL + BOTTOM X-AXIS*/
+    /*VERTICAL + BOTTOM X-AXIS*/
 
-		&.x-axis-bottom {
-			.rpg-scrollable-content {
-				grid-template-rows: 1fr auto;
-			}
+    &.x-axis-bottom {
+      .rpg-scrollable-content {
+        grid-template-rows: 1fr auto;
+      }
 
-			.rpg-content-container {
-				border-top: 1px solid var(--light-gridline-color--);
-			}
+      .rpg-content-container {
+        border-top: 1px solid var(--light-gridline-color--);
+      }
 
-			.rpg-x-axis {
-				order: 2;
-			}
+      .rpg-x-axis {
+        order: 2;
+      }
 
-			.rpg-y-axis {
-				margin-bottom: calc(var(--rpg-x-axis-height, 0) + var(--rpg-scrollbar-width, 0));
-			}
-		}
+      .rpg-y-axis {
+        margin-bottom: calc(
+          var(--rpg-x-axis-height, 0) + var(--rpg-scrollbar-width, 0)
+        );
+      }
+    }
 
-		/*VERTICAL + LEFT Y-AXIS*/
+    /*VERTICAL + LEFT Y-AXIS*/
 
-		&.y-axis-left {
-			grid-template-columns: auto 1fr;
+    &.y-axis-left {
+      grid-template-columns: auto 1fr;
 
-			.rpg-scrollable {
-				order: 2;
-			}
-		}
+      .rpg-scrollable {
+        order: 2;
+      }
+    }
 
-		/*VERTICAL + RIGHT Y-AXIS*/
+    /*VERTICAL + RIGHT Y-AXIS*/
 
-		&.y-axis-right {
-			grid-template-columns: 1fr auto;
-		}
+    &.y-axis-right {
+      grid-template-columns: 1fr auto;
+    }
 
-		.rpg-bar {
-			&.positive {
-				align-items: end;
+    .rpg-bar {
+      &.positive {
+        align-items: end;
 
-				.rpg-small-bar-label {
-					bottom: var(--bar-label-offset--);
-				}
-			}
+        .rpg-small-bar-label {
+          bottom: var(--bar-label-offset--);
+        }
+      }
 
-			&.negative {
-				align-items: start;
+      &.negative {
+        align-items: start;
 
-				.rpg-bar-content {
-					align-items: end;
-				}
+        .rpg-bar-content {
+          align-items: end;
+        }
 
-				.rpg-small-bar-label {
-					top: var(--bar-label-offset--);
-				}
-			}
-		}
-	}
+        .rpg-small-bar-label {
+          top: var(--bar-label-offset--);
+        }
+      }
+    }
+  }
 
-	/*HORIZONTAL ORIENTATION*/
+  /*HORIZONTAL ORIENTATION*/
 
-	&.horizontal {
-		.rpg-scrollable {
-			overflow-x: hidden;
-			overflow-y: auto;
-		}
+  &.horizontal {
+    .rpg-scrollable {
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
 
-		.rpg-bar-container {
-			margin-top: 1rem;
-			margin-bottom: 1rem;
-			gap: 1rem;
-			grid-template-rows: repeat(
+    .rpg-bar-container {
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+      gap: 1rem;
+      grid-template-rows: repeat(
         var(--rpg-data-length, 0),
         minmax(1.5rem, 1fr)
       );
 
-			&.start-from-half .rpg-bar {
-				grid-template-columns: repeat(2, minmax(0, 1fr));
+      &.start-from-half .rpg-bar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
 
-				.rpg-bar-content {
-					.positive & {
-						grid-column-start: 2;
-					}
-				}
-			}
-		}
+        .rpg-bar-content {
+          .positive & {
+            grid-column-start: 2;
+          }
+        }
+      }
+    }
 
-		.rpg-bar {
-			max-height: 3.25rem;
-		}
+    .rpg-bar {
+      max-height: 3.25rem;
+    }
 
-		.rpg-bar-content {
-			height: 100%;
-			container: horizontalBar / size;
-		}
+    .rpg-bar-content {
+      height: 100%;
+      container: horizontalBar / size;
+    }
 
-		.rpg-bar-label {
-			margin: auto;
-			height: fit-content;
-			width: fit-content;
-			align-items: center;
-		}
+    .rpg-bar-label {
+      margin: auto;
+      height: fit-content;
+      width: fit-content;
+      align-items: center;
+    }
 
-		.rpg-small-bar-label {
-			width: fit-content;
-			height: 100%;
-			align-items: center;
-		}
+    .rpg-small-bar-label {
+      width: fit-content;
+      height: 100%;
+      align-items: center;
+    }
 
-		.rpg-x-axis .rpg-axis-title-content {
-			margin-left: calc(var(--rpg-y-axis-width, 0) / 2);
-		}
+    .rpg-x-axis .rpg-axis-title-content {
+      margin-left: calc(var(--rpg-y-axis-width, 0) / 2);
+    }
 
-		.rpg-x-axis-labels {
-			display: flex;
-			justify-content: space-between;
-			margin-left: var(--rpg-x-axis-margin-left, 0);
-			margin-right: var(--rpg-x-axis-margin-right, 0);
-		}
+    .rpg-x-axis-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-left: var(--rpg-x-axis-margin-left, 0);
+      margin-right: var(--rpg-x-axis-margin-right, 0);
+    }
 
-		.rpg-y-axis-labels {
-			margin-top: 1rem;
-			margin-bottom: 1rem;
-			display: grid;
-			align-items: center;
-			gap: 1rem;
-			grid-template-rows: repeat(var(--rpg-data-length, 0), minmax(0, 1fr));
-		}
+    .rpg-y-axis-labels {
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+      display: grid;
+      align-items: center;
+      gap: 1rem;
+      grid-template-rows: repeat(var(--rpg-data-length, 0), minmax(0, 1fr));
+    }
 
-		.rpg-gridlines {
-			grid-template-columns: repeat(calc(var(--rpg-ticks-length, 5) - 1), 1fr);
-		}
+    .rpg-gridlines {
+      grid-template-columns: repeat(calc(var(--rpg-ticks-length, 5) - 1), 1fr);
+    }
 
-		.rpg-gridline {
-			border-right: 1px solid var(--light-gridline-color--);
+    .rpg-gridline {
+      border-right: 1px solid var(--light-gridline-color--);
 
-			&:last-of-type {
-				border-right: 0;
-			}
-		}
+      &:last-of-type {
+        border-right: 0;
+      }
+    }
 
-		/*HORIZONTAL + TOP X-AXIS*/
+    /*HORIZONTAL + TOP X-AXIS*/
 
-		&.x-axis-top {
-			grid-template-rows: auto 1fr;
+    &.x-axis-top {
+      grid-template-rows: auto 1fr;
 
-			.rpg-scrollable {
-				order: 2;
-			}
-		}
+      .rpg-scrollable {
+        order: 2;
+      }
+    }
 
-		/*HORIZONTAL + BOTTOM X-AXIS*/
+    /*HORIZONTAL + BOTTOM X-AXIS*/
 
-		&.x-axis-bottom {
-			grid-template-rows: 1fr auto;
-		}
+    &.x-axis-bottom {
+      grid-template-rows: 1fr auto;
+    }
 
-		/*HORIZONTAL + LEFT Y-AXIS*/
+    /*HORIZONTAL + LEFT Y-AXIS*/
 
-		&.y-axis-left {
-			.rpg-x-axis {
-				margin-left: var(--rpg-y-axis-width, 0);
-				margin-right: var(--rpg-scrollbar-width, 0);
-			}
+    &.y-axis-left {
+      .rpg-x-axis {
+        margin-left: var(--rpg-y-axis-width, 0);
+        margin-right: var(--rpg-scrollbar-width, 0);
+      }
 
-			.rpg-scrollable-content {
-				width: 100%;
-				grid-template-columns: auto 1fr;
-			}
+      .rpg-scrollable-content {
+        width: 100%;
+        grid-template-columns: auto 1fr;
+      }
 
-			.rpg-content-container {
-				border-right: 1px solid var(--gridline-color--);
-			}
-		}
+      .rpg-content-container {
+        border-right: 1px solid var(--gridline-color--);
+      }
+    }
 
-		/*HORIZONTAL + RIGHT Y-AXIS*/
+    /*HORIZONTAL + RIGHT Y-AXIS*/
 
-		&.y-axis-right {
-			.rpg-x-axis {
-				margin-right: calc(var(--rpg-y-axis-width, 0) + var(--rpg-scrollbar-width, 0));
-			}
+    &.y-axis-right {
+      .rpg-x-axis {
+        margin-right: calc(
+          var(--rpg-y-axis-width, 0) + var(--rpg-scrollbar-width, 0)
+        );
+      }
 
-			.rpg-y-axis {
-				order: 2;
-			}
+      .rpg-y-axis {
+        order: 2;
+      }
 
-			.rpg-scrollable-content {
-				width: 100%;
-				grid-template-columns: 1fr auto;
-			}
+      .rpg-scrollable-content {
+        width: 100%;
+        grid-template-columns: 1fr auto;
+      }
 
-			.rpg-content-container {
-				border-left: 1px solid var(--gridline-color--);
-			}
-		}
+      .rpg-content-container {
+        border-left: 1px solid var(--gridline-color--);
+      }
+    }
 
-		.rpg-bar {
-			&.positive {
-				.rpg-small-bar-label {
-					left: var(--bar-label-offset--);
-				}
-			}
+    .rpg-bar {
+      &.positive {
+        .rpg-small-bar-label {
+          left: var(--bar-label-offset--);
+        }
+      }
 
-			&.negative {
-				justify-items: end;
+      &.negative {
+        justify-items: end;
 
-				.rpg-small-bar-label {
-					right: var(--bar-label-offset--);
-				}
-			}
-		}
-	}
+        .rpg-small-bar-label {
+          right: var(--bar-label-offset--);
+        }
+      }
+    }
+  }
 
-	/*TOP X-AXIS*/
+  /*TOP X-AXIS*/
 
-	&.x-axis-top {
-		.rpg-x-axis {
-			border-bottom: solid 1.5px var(--gridline-color--);
+  &.x-axis-top {
+    .rpg-x-axis {
+      border-bottom: solid 1.5px var(--gridline-color--);
 
-			.rpg-axis-title-content {
-				translate: -50% calc(200% - 1px);
-			}
-		}
+      .rpg-axis-title-content {
+        translate: -50% calc(200% - 1px);
+      }
+    }
 
-		.rpg-x-axis-labels {
-			padding-bottom: 1rem;
-		}
-	}
+    .rpg-x-axis-labels {
+      padding-bottom: 1rem;
+    }
+  }
 
-	/*BOTTOM X-AXIS*/
+  /*BOTTOM X-AXIS*/
 
-	&.x-axis-bottom {
-		.rpg-x-axis {
-			border-top: solid 1.5px var(--gridline-color--);
+  &.x-axis-bottom {
+    .rpg-x-axis {
+      border-top: solid 1.5px var(--gridline-color--);
 
-			.rpg-axis-title-content {
-				translate: -50% calc(-50% - 1px);
-			}
-		}
+      .rpg-axis-title-content {
+        translate: -50% calc(-50% - 1px);
+      }
+    }
 
-		.rpg-x-axis-labels {
-			padding-top: 1rem;
-		}
-	}
+    .rpg-x-axis-labels {
+      padding-top: 1rem;
+    }
+  }
 
-	/*LEFT Y-AXIS*/
+  /*LEFT Y-AXIS*/
 
-	&.y-axis-left {
-		.rpg-y-axis-labels {
-			text-align: right;
-		}
+  &.y-axis-left {
+    .rpg-y-axis-labels {
+      text-align: right;
+    }
 
-		.rpg-y-axis .rpg-axis-title-content {
-			transform: rotate(-90deg);
-		}
-	}
+    .rpg-y-axis .rpg-axis-title-content {
+      transform: rotate(-90deg);
+    }
+  }
 
-	/*RIGHT Y-AXIS*/
+  /*RIGHT Y-AXIS*/
 
-	&.y-axis-right {
-		.rpg-y-axis {
-			flex-direction: row-reverse;
+  &.y-axis-right {
+    .rpg-y-axis {
+      flex-direction: row-reverse;
 
-			.rpg-axis-title-content {
-				transform: rotate(90deg);
-			}
-		}
+      .rpg-axis-title-content {
+        transform: rotate(90deg);
+      }
+    }
 
-		.rpg-y-axis-labels {
-			text-align: left;
-		}
-	}
+    .rpg-y-axis-labels {
+      text-align: left;
+    }
+  }
 
-	&.labels-never {
-		.rpg-bar-label {
-			display: none;
-		}
+  &.labels-never {
+    .rpg-bar-label {
+      display: none;
+    }
 
-		.rpg-small-bar-label {
-			display: none;
-		}
-	}
+    .rpg-small-bar-label {
+      display: none;
+    }
+  }
 
-	&.labels-hover {
-		.rpg-bar-label,
-		.rpg-small-bar-label {
-			.rpg-bar:not(:hover) & {
-				opacity: 0;
-			}
-		}
-	}
+  &.labels-hover {
+    .rpg-bar-label,
+    .rpg-small-bar-label {
+      .rpg-bar:not(:hover) & {
+        opacity: 0;
+      }
+    }
+  }
 }
 
 .rpg-scrollable {
-	container: scrollable / inline-size;
+  container: scrollable / inline-size;
 }
 
 .rpg-scrollable-content {
-	display: grid;
-	height: 100%;
+  display: grid;
+  height: 100%;
 }
 
 .rpg-content-container {
-	position: relative;
-	display: flex;
+  position: relative;
+  display: flex;
 }
 
 .rpg-bar-container {
-	flex: 1;
-	position: relative;
-	display: grid;
-	gap: 0.25rem;
-	place-items: center;
-	padding-bottom: 1px;
+  flex: 1;
+  position: relative;
+  display: grid;
+  gap: 0.25rem;
+  place-items: center;
+  padding-bottom: 1px;
 }
 
 .rpg-bar {
-	display: grid;
-	height: 100%;
-	width: 100%;
-	align-items: center;
-	justify-content: normal;
-	transition: var(--transition-colors--);
-	/*TODO: needed?*/
-	/*gap: 1px;*/
+  display: grid;
+  height: 100%;
+  width: 100%;
+  align-items: center;
+  justify-content: normal;
+  transition: var(--transition-colors--);
+  /*TODO: needed?*/
+  /*gap: 1px;*/
 
-	&:hover,
-	&:focus {
-		background-color: var(--bar-bg-color--);
-	}
+  &:hover,
+  &:focus {
+    background-color: var(--bar-bg-color--);
+  }
 }
 
 .rpg-bar-content {
-	position: relative;
-	display: flex;
-	text-align: center;
-	background-color: var(--bar-color--);
-	transition: var(--transition-colors--);
+  position: relative;
+  display: flex;
+  text-align: center;
+  background-color: var(--bar-color--);
+  transition: var(--transition-colors--);
 
-	.rpg-bar:hover > &,
-	.rpg-bar:focus > & {
-		background-color: var(--bar-color-hover--);
-	}
+  .rpg-bar:hover > &,
+  .rpg-bar:focus > & {
+    background-color: var(--bar-color-hover--);
+  }
 }
 
 .rpg-bar-label {
-	z-index: 1;
-	font-size: 0.75rem;
-	display: none;
-	justify-content: center;
-	font-weight: 500;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	font-family: inherit;
-	line-height: 1;
-	color: var(--bar-label-color--);
-	transition: var(--transition-opacity--);
+  z-index: 1;
+  font-size: 0.75rem;
+  display: none;
+  justify-content: center;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: inherit;
+  line-height: 1;
+  color: var(--bar-label-color--);
+  transition: var(--transition-opacity--);
 }
 
 .rpg-small-bar-label {
-	display: flex;
-	position: absolute;
-	line-height: 1;
-	font-size: 0.75rem;
-	font-weight: 500;
-	color: var(--bar-label-color--);
-	transition: var(--transition-opacity--);
+  display: flex;
+  position: absolute;
+  line-height: 1;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--bar-label-color--);
+  transition: var(--transition-opacity--);
 }
 
 .rpg-x-axis {
-	position: relative;
-	z-index: 1;
+  position: relative;
+  z-index: 1;
 
-	.rpg-axis-title {
-		left: 50%;
-	}
+  .rpg-axis-title {
+    left: 50%;
+  }
 }
 
 .rpg-x-axis-labels {
-	position: relative;
-	gap: 0.25rem;
-	color: var(--bar-label-color--);
+  position: relative;
+  gap: 0.25rem;
+  color: var(--bar-label-color--);
 }
 
 .rpg-y-axis {
-	z-index: 1;
-	display: flex;
-	justify-content: end;
+  z-index: 1;
+  display: flex;
+  justify-content: end;
 
-	&:has(.rpg-y-axis-labels:hover) {
-		.rpg-y-axis-line {
-			background-color: var(--bar-color--);
-		}
+  &:has(.rpg-y-axis-labels:hover) {
+    .rpg-y-axis-line {
+      background-color: var(--bar-color--);
+    }
 
-		.rpg-axis-title-content {
-			color: var(--bar-color-hover--);
-		}
-	}
+    .rpg-axis-title-content {
+      color: var(--bar-color-hover--);
+    }
+  }
 }
 
 .rpg-y-axis-labels {
-	width: calc(100% - 2rem);
-	flex: 1;
-	flex-direction: column-reverse;
-	text-align: right;
+  width: calc(100% - 2rem);
+  flex: 1;
+  flex-direction: column-reverse;
+  text-align: right;
 }
 
 .rpg-y-axis-line-container {
-	position: relative;
-	width: 1.5rem;
-	display: flex;
-	justify-content: center;
+  position: relative;
+  width: 1.5rem;
+  display: flex;
+  justify-content: center;
 
-	&:hover,
-	&:active {
-		cursor: col-resize;
-	}
+  &:hover,
+  &:active {
+    cursor: col-resize;
+  }
 
-	&:hover,
-	&:active,
-	&:focus {
-		.rpg-y-axis-line {
-			background-color: var(--bar-color--);
-		}
+  &:hover,
+  &:active,
+  &:focus {
+    .rpg-y-axis-line {
+      background-color: var(--bar-color--);
+    }
 
-		.rpg-axis-title-content {
-			color: var(--bar-color-hover--);
-		}
-	}
+    .rpg-axis-title-content {
+      color: var(--bar-color-hover--);
+    }
+  }
 
-	.rpg-axis-title {
-		top: 50%;
-	}
+  .rpg-axis-title {
+    top: 50%;
+  }
 
-	.rpg-axis-title-content {
-		translate: calc(-50% + 1px) -50%;
-	}
+  .rpg-axis-title-content {
+    translate: calc(-50% + 1px) -50%;
+  }
 }
 
 .rpg-y-axis-line {
-	height: 100%;
-	width: 0.2rem;
-	border-radius: 1rem;
-	touch-action: none; /* for dragging */
-	box-sizing: border-box;
-	transition: var(--transition-colors--);
+  height: 100%;
+  width: 0.2rem;
+  border-radius: 1rem;
+  touch-action: none; /* for dragging */
+  box-sizing: border-box;
+  transition: var(--transition-colors--);
 }
 
 .rpg-axis-label {
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
-	font-size: 0.813rem;
-	margin: 0 0.125rem;
-	line-height: 1;
-	color: var(--bar-label-color--);
-	transition: var(--transition-colors--);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.813rem;
+  margin: 0 0.125rem;
+  line-height: 1;
+  color: var(--bar-label-color--);
+  transition: var(--transition-colors--);
 }
 
 .rpg-axis-title {
-	font-size: 0.75rem;
-	position: sticky;
-	width: fit-content;
-	height: fit-content;
-	overflow: inherit;
-	margin: 0;
+  font-size: 0.75rem;
+  position: sticky;
+  width: fit-content;
+  height: fit-content;
+  overflow: inherit;
+  margin: 0;
 }
 
 .rpg-axis-title-content {
-	position: absolute;
-	height: auto;
-	width: auto;
-	padding: 1px 0.125rem;
-	background-color: var(--axis-title-bg-color--);
+  position: absolute;
+  height: auto;
+  width: auto;
+  padding: 1px 0.125rem;
+  background-color: var(--axis-title-bg-color--);
 }
 
 .rpg-gridlines {
-	position: absolute;
-	display: grid;
-	height: 100%;
-	width: 100%;
+  position: absolute;
+  display: grid;
+  height: 100%;
+  width: 100%;
 }
 
 .rpg-empty-state {
-	font-size: 0.813rem;
+  font-size: 0.813rem;
 }
 
 [aria-live="polite"] {
-	display: none;
+  display: none;
 }
 
 #rpg-get-text-width {
-	width: fit-content;
-	height: 0;
+  width: fit-content;
+  height: 0;
 }
 
 /* TODO: see if this is actually prettier */
 @container scrollable (min-width: 550px) {
-	.rpg-x-axis-labels,
-	.rpg-bar-container {
-		/*gap: 0.375rem;*/
-	}
+  .rpg-x-axis-labels,
+  .rpg-bar-container {
+    /*gap: 0.375rem;*/
+  }
 }
 
 @container scrollable (min-width: 650px) {
-	.rpg-x-axis-labels,
-	.rpg-bar-container {
-		/*gap: 0.5rem;*/
-	}
+  .rpg-x-axis-labels,
+  .rpg-bar-container {
+    /*gap: 0.5rem;*/
+  }
 }
 
 @container scrollable (min-width: 750px) {
-	.rpg-x-axis-labels,
-	.rpg-bar-container {
-		/*gap: 0.625rem;*/
-	}
+  .rpg-x-axis-labels,
+  .rpg-bar-container {
+    /*gap: 0.625rem;*/
+  }
 }
 
 @container verticalBar (min-height: 1.25rem) {
-	.rpg-bar-label {
-		display: flex;
-	}
+  .rpg-bar-label {
+    display: flex;
+  }
 
-	.rpg-small-bar-label {
-		display: none;
-	}
+  .rpg-small-bar-label {
+    display: none;
+  }
 }
 
 @container horizontalBar (min-width: 2.75rem) {
-	.rpg-bar-label {
-		display: flex;
-	}
+  .rpg-bar-label {
+    display: flex;
+  }
 
-	.rpg-small-bar-label {
-		display: none;
-	}
+  .rpg-small-bar-label {
+    display: none;
+  }
 }
