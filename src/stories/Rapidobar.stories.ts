@@ -18,43 +18,70 @@ const meta = {
       control: "radio",
       options: Object.values(Orientation),
       description: "The orientation of the bar chart",
+      table: {
+        defaultValue: { summary: Orientation.Vertical },
+      },
     },
     theme: {
       control: "radio",
       options: Object.values(Theme),
       description: "The theme of the bar chart",
+      table: {
+        defaultValue: { summary: Theme.Light },
+      },
     },
     xAxisPosition: {
       control: "radio",
       options: Object.values(XAxisPosition),
       description: "The position of x-axis",
+      table: {
+        defaultValue: { summary: XAxisPosition.Bottom },
+      },
     },
     yAxisPosition: {
       control: "radio",
       options: Object.values(YAxisPosition),
       description: "The position of y-axis",
+      table: {
+        defaultValue: { summary: YAxisPosition.Left },
+      },
     },
     tooltipTheme: {
       control: "radio",
       options: Object.values(Theme),
-      description: "The theme of bar tooltips",
+      description: "The theme of tooltips",
+      table: {
+        defaultValue: { summary: Theme.Light },
+      },
     },
     showLabels: {
       control: "radio",
       options: Object.values(ShowLabels),
       description: "The way of showing labels on the bars",
+      table: {
+        defaultValue: { summary: ShowLabels.Always },
+      },
     },
     categoryAxis: {
       control: "object",
       description: "Category axis title and *optional* label formatter",
+      table: {
+        defaultValue: { summary: "{}" },
+      },
     },
     valueAxis: {
       control: "object",
       description: "Value axis title and *optional* label formatter",
+      table: {
+        defaultValue: { summary: "{}" },
+      },
     },
     data: {
       control: "object",
       description: "The data for the bar chart",
+      table: {
+        defaultValue: { summary: "[]" },
+      },
     },
   },
   args: {
