@@ -258,7 +258,6 @@ export class Rapidobar extends LitElement {
         this._minBarSize,
         this._maxBarSize,
       );
-      const size = isVertical ? "height" : "width";
 
       barTemplates.push(
         html`<div
@@ -269,7 +268,10 @@ export class Rapidobar extends LitElement {
           data-category=${formatterCategory}
           data-value=${formattedValue}
         >
-          <div class="rpg-bar-content" style="${size}: ${Math.abs(barSize)}%;">
+          <div
+            class="rpg-bar-content"
+            style="--rpg-bar-size: ${Math.abs(barSize)}%;"
+          >
             <div class="rpg-bar-label">${value}</div>
             <div class="rpg-small-bar-label">${value}</div>
           </div>
