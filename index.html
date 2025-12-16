@@ -16,30 +16,36 @@
       window.onload = function () {
         const rapidograph = document.querySelector("rapido-bar");
         rapidograph.data = [
-          {category: "Jan 2023", value: 1},
-          {category: "Feb 2023", value: 0},
-          {category: "Mar 2023", value: 3},
-          {category: "Apr 2023", value: -12},
-          {category: "May 2023", value: -6},
-          {category: "Jun 2023", value: -10},
-          {category: "Jul 2023", value: 5},
-          {category: "Aug 2023", value: 1},
-          {category: "Sep 2023", value: 0},
-          {category: "Oct 2023", value: 12},
-          {category: "Nov 2023", value: -12},
-          {category: "Dec 2023", value: -1},
+          { category: "Jan 2023", value: 1 },
+          { category: "Feb 2023", value: 0 },
+          { category: "Mar 2023", value: 3 },
+          { category: "Apr 2023", value: -12 },
+          { category: "May 2023", value: -6 },
+          { category: "Jun 2023", value: -10 },
+          { category: "Jul 2023", value: 5 },
+          { category: "Aug 2023", value: 1 },
+          { category: "Sep 2023", value: 0 },
+          { category: "Oct 2023", value: 12 },
+          { category: "Nov 2023", value: -12 },
+          { category: "Dec 2023", value: -1 },
         ];
         rapidograph.categoryAxis = {
           label: "Month",
         };
         rapidograph.valueAxis = {
           label: "Number (%)",
-          formatter: val => `${val}%`,
+          formatter: (val) => `${val}%`,
         };
-      }
+      };
     </script>
   </head>
-  <body style="height: 400px; padding: 1rem; font-family: 'Inter', sans-serif;">
+  <body
+    style="
+      height: 400px;
+      padding: 1rem;
+      font-family: 'Inter', sans-serif;
+    "
+  >
     <rapido-bar
       orientation="vertical"
       xAxisPosition="bottom"
