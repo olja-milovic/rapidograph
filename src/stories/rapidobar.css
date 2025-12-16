@@ -10,5 +10,9 @@
 }
 
 .container.dark {
-  background-color: #292a2e;
+  background-color: #303135;
+}
+
+div[scale="1"] {
+  transform: none;
 }

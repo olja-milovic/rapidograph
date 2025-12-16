@@ -44,23 +44,13 @@ const meta = {
       options: Object.values(ShowLabels),
       description: "The way of showing labels on the bars",
     },
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    "categoryAxis.label": {
-      description: "Category axis label",
-      control: "text",
-      table: {
-        category: "AxisConfig",
-        type: { summary: "string" },
-      },
+    categoryAxis: {
+      control: "object",
+      description: "Category axis title and *optional* label formatter",
     },
-    "categoryAxis.formatter": {
-      description: "Category axis formatter",
-      control: false,
-      table: {
-        category: "AxisConfig",
-        type: { summary: "(value) => string" },
-      },
+    valueAxis: {
+      control: "object",
+      description: "Value axis title and *optional* label formatter",
     },
     data: {
       control: "object",
@@ -76,26 +66,30 @@ const meta = {
     showLabels: ShowLabels.Always,
     categoryAxis: {
       label: "Month",
+      formatter: (isoDate) => {
+        const date = new Date(isoDate);
+        const month = date.toLocaleString("en-US", { month: "short" });
+        const year = date.getFullYear();
+        return `${month} ${year}`;
+      },
     },
     valueAxis: {
       label: "Number (%)",
       formatter: (val) => `${val}%`,
     },
     data: [
-      { category: "Jan 2023", value: 1 },
-      { category: "Feb 2023", value: 0 },
-      { category: "Mar 2023", value: 3 },
-      { category: "Apr 2023", value: -12 },
-      { category: "May 2023", value: -6 },
-      { category: "Jun 2023", value: -10 },
-      { category: "Jul 2023", value: 5 },
-      { category: "Jan 2023", value: 1 },
-      { category: "Feb 2023", value: 0 },
-      { category: "Mar 2023", value: 12 },
-      { category: "Apr 2023", value: -12 },
-      { category: "May 2023", value: -1 },
-      { category: "Jun 2023", value: -10 },
-      { category: "Jul 2023", value: 5 },
+      { category: "2025-01-01", value: 1 },
+      { category: "2025-02-01", value: 0 },
+      { category: "2025-03-01", value: 3 },
+      { category: "2025-04-01", value: -12 },
+      { category: "2025-05-01", value: -6 },
+      { category: "2025-06-01", value: -10 },
+      { category: "2025-07-01", value: 5 },
+      { category: "2025-08-01", value: 1 },
+      { category: "2025-09-01", value: 0 },
+      { category: "2025-10-01", value: 12 },
+      { category: "2025-11-01", value: -12 },
+      { category: "2025-12-01", value: -1 },
     ],
   },
 } satisfies Meta<RapidobarProps>;

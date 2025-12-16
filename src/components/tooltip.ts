@@ -37,7 +37,10 @@ export class Tooltip extends LitElement {
     this._value = value ?? "NaN";
 
     this.setAttribute("show", hasElement.toString());
-    this.setAttribute("data-content", `${this._category}: ${this._value}`);
+    this.setAttribute(
+      "data-content",
+      hasElement ? `${this._category}: ${this._value}` : "",
+    );
     this.moveTooltip();
   }
 
@@ -59,7 +62,7 @@ export class Tooltip extends LitElement {
   render() {
     return html`
       <div class="rpg-tooltip-wrapper">
-        <div class="rpg-tooltip-label">${this._category}</div>
+        <div class="rpg-tooltip-category">${this._category}</div>
         <div class="rpg-tooltip-value">${this._value}</div>
       </div>
     `;
@@ -69,7 +72,7 @@ export class Tooltip extends LitElement {
     if (!this.element) {
       return;
     }
-    // wait for category and value to be updated in the dom
+    // wait for category and value DOM updates
     await this.updateComplete;
 
     const containerRect = this.container.getBoundingClientRect();

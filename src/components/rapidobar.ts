@@ -246,6 +246,11 @@ export class Rapidobar extends LitElement {
 
     const barTemplates = [];
     for (const { category, value } of this.data) {
+      const formatterCategory = formatAxisLabel(
+        category,
+        this.categoryAxis.formatter,
+      );
+      const formattedValue = formatAxisLabel(value, this.valueAxis.formatter);
       const isPositive =
         this._allPositive || !this._allNegative ? value >= 0 : value > 0;
       const barSize = getSizeInPercentages(
@@ -258,11 +263,11 @@ export class Rapidobar extends LitElement {
       barTemplates.push(
         html`<div
           class="rpg-bar ${isPositive ? "positive" : "negative"}"
-          aria-label="${category}: ${value}"
+          aria-label="${formatterCategory}: ${formattedValue}"
           role="listitem"
           tabindex="0"
-          data-category=${category}
-          data-value=${formatAxisLabel(value, this.valueAxis.formatter)}
+          data-category=${formatterCategory}
+          data-value=${formattedValue}
         >
           <div class="rpg-bar-content" style="${size}: ${Math.abs(barSize)}%;">
             <div class="rpg-bar-label">${value}</div>

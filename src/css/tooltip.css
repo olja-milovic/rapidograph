@@ -8,9 +8,9 @@
 	pointer-events: none;
 	user-select: none;
 	opacity: 0;
-	transition: transform 0.12s ease-in-out;
+	transition: transform 120ms ease-in-out;
 
-	position: absolute;
+	position: fixed;
 	top: 0;
 	left: 0;
 	transform: translate(var(--x, 0), var(--y, 0));
@@ -45,7 +45,7 @@
 		flex-direction: column;
 		row-gap: 0.5rem;
 
-		.rpg-tooltip-label {
+		.rpg-tooltip-category {
 			font-weight: 500;
 		}
 
@@ -71,7 +71,7 @@
 }
 
 :host([show="true"]) {
-	animation: fadeIn 120ms ease-in-out both 90ms;
+	animation: fadeIn 120ms ease-in-out both 100ms;
 }
 
 @keyframes fadeIn {
