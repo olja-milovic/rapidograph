@@ -73,6 +73,7 @@ export class Rapidobar extends LitElement {
   private _yAxisMaxWidth: number = MAX_Y_AXIS_WIDTH;
   private _vObserver: IntersectionObserver | undefined;
   private _hObserver: IntersectionObserver | undefined;
+  private _oldCursor?: string;
 
   private get _yAxisWidthPercentage() {
     const maxYAxisWidth = this._yAxisMaxWidth - this._yAxisMinWidth;
@@ -262,7 +263,7 @@ export class Rapidobar extends LitElement {
         this.categoryAxis.formatter,
       );
       const formattedAxisValue = formatLabel(value, this.valueAxis.formatter);
-      const formattedBarValue = formatLabel(value, this.formatters.value);
+      const formattedBarValue = formatLabel(value, this.formatters?.value);
       const isPositive =
         this._allPositive || !this._allNegative ? value >= 0 : value > 0;
       const barSize = getSizeInPercentages(
@@ -483,11 +484,16 @@ export class Rapidobar extends LitElement {
     function handlePointerUp(): void {
       self._yAxisWidth = newWidth;
       self._isDraggingYAxis = false;
-      document.body.style.removeProperty("cursor");
+      if (self._oldCursor) {
+        document.body.style.cursor = self._oldCursor;
+      } else {
+        document.body.style.removeProperty("cursor");
+      }
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
     }
 
+    self._oldCursor = document.body.style.cursor;
     document.body.style.cursor = "col-resize";
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp);
