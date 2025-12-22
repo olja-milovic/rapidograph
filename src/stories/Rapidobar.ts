@@ -44,10 +44,10 @@ export const Rapidobar = ({
       <rapido-bar
         orientation=${orientation}
         theme=${theme}
-        xAxisPosition=${xAxisPosition}
-        yAxisPosition=${yAxisPosition}
-        tooltipTheme=${tooltipTheme}
-        showLabels=${showLabels}
+        x-axis-position=${xAxisPosition}
+        y-axis-position=${yAxisPosition}
+        tooltip-theme=${tooltipTheme}
+        show-labels=${showLabels}
         .data=${data}
         .categoryAxis=${categoryAxis}
         .valueAxis=${valueAxis}

@@ -140,19 +140,19 @@ export class Rapidobar extends LitElement {
   @property({ type: Orientation })
   orientation: Orientation = Orientation.Vertical;
 
-  @property({ type: XAxisPosition })
+  @property({ type: XAxisPosition, attribute: "x-axis-position" })
   xAxisPosition = XAxisPosition.Bottom;
 
-  @property({ type: YAxisPosition })
+  @property({ type: YAxisPosition, attribute: "y-axis-position" })
   yAxisPosition = YAxisPosition.Left;
 
   @property({ type: Theme })
   theme = Theme.Light;
 
-  @property({ type: Theme })
+  @property({ type: Theme, attribute: "tooltip-theme" })
   tooltipTheme = Theme.Light;
 
-  @property({ type: ShowLabels })
+  @property({ type: ShowLabels, attribute: "show-labels" })
   showLabels = ShowLabels.Always;
 
   private get _wrapperClasses() {

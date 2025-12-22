@@ -31,6 +31,7 @@ const meta = {
       },
     },
     xAxisPosition: {
+      name: "x-axis-position",
       control: "radio",
       options: Object.values(XAxisPosition),
       description: "The position of x-axis",
@@ -39,6 +40,7 @@ const meta = {
       },
     },
     yAxisPosition: {
+      name: "y-axis-position",
       control: "radio",
       options: Object.values(YAxisPosition),
       description: "The position of y-axis",
@@ -47,6 +49,7 @@ const meta = {
       },
     },
     tooltipTheme: {
+      name: "tooltip-theme",
       control: "radio",
       options: Object.values(Theme),
       description: "The theme of tooltips",
@@ -55,6 +58,7 @@ const meta = {
       },
     },
     showLabels: {
+      name: "show-labels",
       control: "radio",
       options: Object.values(ShowLabels),
       description: "The way of showing labels on the bars",
