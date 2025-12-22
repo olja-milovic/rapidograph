@@ -85,9 +85,12 @@
   /*custom JS related variables*/
   --rpg-data-length: 0;
   --rpg-x-axis-height: 0;
+  --rpg-x-axis-margin-left: 0;
   --rpg-y-axis-width: 0;
+  --rpg-x-axis-margin-right: 0;
   --rpg-scrollbar-width: 0;
   --rpg-bar-size: 0;
+  --rpg-ticks-length: 5;
 
   display: grid;
   height: 100%;
@@ -190,6 +193,7 @@
 
     .rpg-y-axis-line-container .rpg-axis-title {
       height: 50%;
+      translate: 0 100%;
     }
 
     .rpg-gridline {
@@ -363,7 +367,7 @@
     }
 
     .rpg-gridlines {
-      grid-template-columns: repeat(calc(var(--rpg-ticks-length, 5) - 1), 1fr);
+      grid-template-columns: repeat(calc(var(--rpg-ticks-length) - 1), 1fr);
     }
 
     .rpg-gridline {
@@ -389,6 +393,10 @@
 
     &.x-axis-bottom {
       grid-template-rows: 1fr auto;
+    }
+
+    .rpg-y-axis-line-container .rpg-axis-title {
+      top: 50%;
     }
 
     /*HORIZONTAL + LEFT Y-AXIS*/
@@ -641,6 +649,7 @@
   width: 1.5rem;
   display: flex;
   justify-content: center;
+  touch-action: none; /* for dragging */
 
   &:hover,
   &:active {
@@ -659,10 +668,6 @@
     }
   }
 
-  .rpg-axis-title {
-    top: 50%;
-  }
-
   .rpg-axis-title-content {
     translate: calc(-50% + 1px) -50%;
   }
@@ -672,7 +677,6 @@
   height: 100%;
   width: 0.2rem;
   border-radius: 1rem;
-  touch-action: none; /* for dragging */
   box-sizing: border-box;
   transition: var(--_transition-colors);
 }
