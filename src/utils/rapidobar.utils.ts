@@ -9,7 +9,7 @@ import {
 import { Orientation } from "../types";
 
 export function noop() {}
-export function echo(value: string | number): string | number {
+export function echo<T extends string | number>(value: T): T {
   return value;
 }
 
@@ -40,13 +40,13 @@ export function checkIfAllPositiveOrNegative(
 }
 
 /**
- * Use axis formatter if it exists, or return the original axis label.
- * @param {string} label - Axis label
- * @param [formatter=echo] - Axis label formatter
+ * Use label formatter if it exists, or return the original label.
+ * @param {string | number} label - Axis or bar label
+ * @param [formatter=echo] - Axis or bar label formatter
  */
-export function formatAxisLabel(
-  label: string | number,
-  formatter = echo,
+export function formatLabel<T extends string | number>(
+  label: T,
+  formatter: (value: T) => string | number = echo,
 ): string | number {
   return formatter(label);
 }

@@ -5,6 +5,7 @@ import {
   Orientation,
   ShowLabels,
   Theme,
+  type ValueFormatters,
   XAxisPosition,
   YAxisPosition,
 } from "../types";
@@ -29,7 +30,7 @@ import {
   calculateYAxisWidths,
   checkIfAllPositiveOrNegative,
   checkIfSomePositiveAndNegative,
-  formatAxisLabel,
+  formatLabel,
   generateTicks,
   getMinAndMaxInPercentages,
   getScrollbarSize,
@@ -122,11 +123,14 @@ export class Rapidobar extends LitElement {
     );
   }
 
-  @property({ type: Object })
+  @property({ type: Object, attribute: false })
   categoryAxis: AxisConfig = { label: "" };
 
-  @property({ type: Object })
+  @property({ type: Object, attribute: false })
   valueAxis: AxisConfig = { label: "" };
+
+  @property({ type: Object, attribute: false })
+  formatters: ValueFormatters = {};
 
   @property({ type: Orientation })
   orientation: Orientation = Orientation.Vertical;
@@ -193,7 +197,7 @@ export class Rapidobar extends LitElement {
     const yAxisConfig = isVertical ? this.valueAxis : this.categoryAxis;
 
     for (const item of xAxisValues) {
-      const label = formatAxisLabel(item, xAxisConfig.formatter);
+      const label = formatLabel(item, xAxisConfig.formatter);
       xAxisLabelTemplates.push(html`
         <div class="rpg-axis-label" title=${label}>${label}</div>
       `);
@@ -209,7 +213,7 @@ export class Rapidobar extends LitElement {
       </div>
     `;
     for (const item of yAxisValues) {
-      const label = formatAxisLabel(item, yAxisConfig.formatter);
+      const label = formatLabel(item, yAxisConfig.formatter);
       yAxisLabelTemplates.push(html`
         <div class="rpg-axis-label" title=${label}>${label}</div>
       `);
@@ -246,11 +250,12 @@ export class Rapidobar extends LitElement {
 
     const barTemplates = [];
     for (const { category, value } of this.data) {
-      const formatterCategory = formatAxisLabel(
+      const formatterCategory = formatLabel(
         category,
         this.categoryAxis.formatter,
       );
-      const formattedValue = formatAxisLabel(value, this.valueAxis.formatter);
+      const formattedAxisValue = formatLabel(value, this.valueAxis.formatter);
+      const formattedBarValue = formatLabel(value, this.formatters.value);
       const isPositive =
         this._allPositive || !this._allNegative ? value >= 0 : value > 0;
       const barSize = getSizeInPercentages(
@@ -262,18 +267,18 @@ export class Rapidobar extends LitElement {
       barTemplates.push(
         html`<div
           class="rpg-bar ${isPositive ? "positive" : "negative"}"
-          aria-label="${formatterCategory}: ${formattedValue}"
+          aria-label="${formatterCategory}: ${formattedAxisValue}"
           role="listitem"
           tabindex="0"
           data-category=${formatterCategory}
-          data-value=${formattedValue}
+          data-value=${formattedAxisValue}
         >
           <div
             class="rpg-bar-content"
             style="--rpg-bar-size: ${Math.abs(barSize)}%;"
           >
-            <div class="rpg-bar-label">${value}</div>
-            <div class="rpg-small-bar-label">${value}</div>
+            <div class="rpg-bar-label">${formattedBarValue}</div>
+            <div class="rpg-small-bar-label">${formattedBarValue}</div>
           </div>
         </div>`,
       );

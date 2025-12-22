@@ -29,6 +29,9 @@
           { category: "Nov 2023", value: -12 },
           { category: "Dec 2023", value: -1 },
         ];
+        rapidograph.formatters = {
+          value: (value) => `${value}%`,
+        };
         rapidograph.categoryAxis = {
           label: "Month",
         };
@@ -43,7 +46,7 @@
     style="
       height: 400px;
       padding: 1rem;
-      font-family: 'Inter', sans-serif;
+      font-family: Inter, sans-serif;
     "
   >
     <rapido-bar
