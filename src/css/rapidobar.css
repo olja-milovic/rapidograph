@@ -536,12 +536,14 @@
 }
 
 .rpg-bar-container {
+  list-style-type: none;
+  padding: 0 0 1px 0;
+  margin: 0;
   flex: 1;
   position: relative;
   display: grid;
   gap: 0.25rem;
   place-items: center;
-  padding-bottom: 1px;
 }
 
 .rpg-bar {

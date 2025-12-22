@@ -43,6 +43,7 @@ import {
   eventOptions,
   property,
   query,
+  queryAll,
   state,
 } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
@@ -70,7 +71,6 @@ export class Rapidobar extends LitElement {
   private _allNegative: boolean = false;
   private _yAxisMinWidth: number = MIN_Y_AXIS_WIDTH;
   private _yAxisMaxWidth: number = MAX_Y_AXIS_WIDTH;
-  private _isDraggingYAxis: boolean = false;
   private _vObserver: IntersectionObserver | undefined;
   private _hObserver: IntersectionObserver | undefined;
 
@@ -92,6 +92,10 @@ export class Rapidobar extends LitElement {
   private _activeBar: HTMLElement | null = null;
   @state()
   private _yAxisWidth: number = DEFAULT_Y_AXIS_WIDTH;
+  @state()
+  private _isDraggingYAxis: boolean = false;
+  @state()
+  private _focusedBarIndex: number = 0;
 
   @property({ type: Array, attribute: false })
   get data(): DataItem[] {
@@ -186,6 +190,8 @@ export class Rapidobar extends LitElement {
   private _yAxis!: HTMLElement;
   @query("#rpg-get-text-width")
   private _textSizeDiv!: HTMLElement;
+  @queryAll(".rpg-bar")
+  private _bars!: HTMLElement[];
 
   render() {
     const isVertical = this.orientation === Orientation.Vertical;
@@ -249,7 +255,8 @@ export class Rapidobar extends LitElement {
     }
 
     const barTemplates = [];
-    for (const { category, value } of this.data) {
+    for (const [index, { category, value }] of this.data.entries()) {
+      const isFocused = index === this._focusedBarIndex;
       const formatterCategory = formatLabel(
         category,
         this.categoryAxis.formatter,
@@ -265,11 +272,11 @@ export class Rapidobar extends LitElement {
       );
 
       barTemplates.push(
-        html`<div
+        html`<li
           class="rpg-bar ${isPositive ? "positive" : "negative"}"
+          tabindex=${isFocused ? 0 : -1}
+          aria-current=${isFocused ? "true" : "false"}
           aria-label="${formatterCategory}: ${formattedAxisValue}"
-          role="listitem"
-          tabindex="0"
           data-category=${formatterCategory}
           data-value=${formattedAxisValue}
         >
@@ -280,7 +287,7 @@ export class Rapidobar extends LitElement {
             <div class="rpg-bar-label">${formattedBarValue}</div>
             <div class="rpg-small-bar-label">${formattedBarValue}</div>
           </div>
-        </div>`,
+        </li>`,
       );
     }
 
@@ -288,24 +295,26 @@ export class Rapidobar extends LitElement {
       <div
         class=${classMap(this._wrapperClasses)}
         style=${styleMap(this._wrapperStyles)}
+        role="figure"
       >
         <div class="rpg-scrollable">
           <div class="rpg-scrollable-content">
             ${isVertical ? xAxisTemplate : yAxisTemplate}
             <div class="rpg-content-container">
               <div class="rpg-gridlines">${gridlineTemplates}</div>
-              <div
+              <ul
                 class=${classMap(this._barContainerClasses)}
-                role="list"
                 @mouseenter=${this.onBarEnter}
                 @mouseleave=${this.onBarContainerMouseLeave}
                 @focus=${this.onBarContainerFocus}
-                @blur=${this.onBarContainerFocusOut}
+                @blur=${this.onBarContainerBlur}
+                @keydown=${this.onBarContainerKeyDown}
+                aria-orientation=${this.orientation}
               >
                 ${this.data.length
                   ? barTemplates
                   : html`<div class="rpg-empty-state">No data</div>`}
-              </div>
+              </ul>
             </div>
           </div>
         </div>
@@ -397,13 +406,43 @@ export class Rapidobar extends LitElement {
   }
 
   @eventOptions({ capture: true })
-  private onBarContainerFocusOut(event: FocusEvent) {
+  private onBarContainerBlur(event: FocusEvent) {
     const nextFocused = event.relatedTarget as HTMLElement;
     if (
       !nextFocused ||
       (nextFocused && !this._barContainer.contains(nextFocused))
     ) {
       this._activeBar = null;
+      this._focusedBarIndex = 0;
+    }
+  }
+
+  @eventOptions({ capture: true })
+  private onBarContainerKeyDown(event: KeyboardEvent) {
+    const isVertical = this.orientation === Orientation.Vertical;
+    const nextKey = isVertical ? "ArrowRight" : "ArrowDown";
+    const prevKey = isVertical ? "ArrowLeft" : "ArrowUp";
+    const key = event.key;
+
+    if (key === nextKey) {
+      event.preventDefault();
+      this._focusedBarIndex = Math.min(
+        this._focusedBarIndex + 1,
+        this.data.length - 1,
+      );
+      this._bars[this._focusedBarIndex].focus();
+    } else if (key === prevKey) {
+      event.preventDefault();
+      this._focusedBarIndex = Math.max(this._focusedBarIndex - 1, 0);
+      this._bars[this._focusedBarIndex].focus();
+    } else if (key === "Home") {
+      event.preventDefault();
+      this._focusedBarIndex = 0;
+      this._bars[this._focusedBarIndex].focus();
+    } else if (key === "End") {
+      event.preventDefault();
+      this._focusedBarIndex = this.data.length - 1;
+      this._bars[this._focusedBarIndex].focus();
     }
   }
 
@@ -458,25 +497,41 @@ export class Rapidobar extends LitElement {
     const percentage = parseInt(this._yAxisWidthPercentage ?? "0", 10);
     const key = event.key;
     const isLeftAxis = this.yAxisPosition === YAxisPosition.Left;
+    const leftKey = isLeftAxis ? "ArrowLeft" : "ArrowRight";
+    const rightKey = isLeftAxis ? "ArrowRight" : "ArrowLeft";
     const commonArgs = {
       currentPercentage: percentage,
       minWidth: this._yAxisMinWidth,
       maxWidth: this._yAxisMaxWidth,
     };
 
-    if (key === (isLeftAxis ? "ArrowLeft" : "ArrowRight")) {
+    if (key === leftKey) {
       event.preventDefault();
       this._yAxisWidth =
         getUpdatedYAxisWidth({
           ...commonArgs,
           widthPercentage: Math.max(percentage - 5, 0),
         }) ?? this._yAxisWidth;
-    } else if (key === (isLeftAxis ? "ArrowRight" : "ArrowLeft")) {
+    } else if (key === rightKey) {
       event.preventDefault();
       this._yAxisWidth =
         getUpdatedYAxisWidth({
           ...commonArgs,
           widthPercentage: Math.min(percentage + 5, 100),
+        }) ?? this._yAxisWidth;
+    } else if (key === "Home") {
+      event.preventDefault();
+      this._yAxisWidth =
+        getUpdatedYAxisWidth({
+          ...commonArgs,
+          widthPercentage: 0,
+        }) ?? this._yAxisWidth;
+    } else if (key === "End") {
+      event.preventDefault();
+      this._yAxisWidth =
+        getUpdatedYAxisWidth({
+          ...commonArgs,
+          widthPercentage: 100,
         }) ?? this._yAxisWidth;
     }
   }

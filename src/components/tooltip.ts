@@ -55,8 +55,9 @@ export class Tooltip extends LitElement {
 
   connectedCallback() {
     super.connectedCallback();
-    this.setAttribute("inert", "");
-    this.setAttribute("role", "tooltip");
+    this.id = "rpg-tooltip";
+    this.role = "tooltip";
+    this.inert = true;
   }
 
   render() {
