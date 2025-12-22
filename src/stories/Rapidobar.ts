@@ -6,6 +6,7 @@ import type {
   Orientation,
   ShowLabels,
   Theme,
+  ValueFormatters,
   XAxisPosition,
   YAxisPosition,
 } from "../types";
@@ -23,6 +24,7 @@ export interface RapidobarProps {
   data: DataItem[];
   categoryAxis: AxisConfig;
   valueAxis: AxisConfig;
+  formatters: ValueFormatters;
 }
 
 export const Rapidobar = ({
@@ -35,6 +37,7 @@ export const Rapidobar = ({
   data,
   categoryAxis,
   valueAxis,
+  formatters,
 }: RapidobarProps) => {
   return html`
     <div class=${classMap({ container: true, [theme]: true })}>
@@ -48,6 +51,7 @@ export const Rapidobar = ({
         .data=${data}
         .categoryAxis=${categoryAxis}
         .valueAxis=${valueAxis}
+        .formatters=${formatters}
       ></rapido-bar>
     </div>
   `;

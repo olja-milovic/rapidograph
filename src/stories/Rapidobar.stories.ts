@@ -76,6 +76,13 @@ const meta = {
         defaultValue: { summary: "{}" },
       },
     },
+    formatters: {
+      control: "object",
+      description: "Bar values formatter",
+      table: {
+        defaultValue: { summary: "{}" },
+      },
+    },
     data: {
       control: "object",
       description: "The data for the bar chart",
@@ -103,6 +110,9 @@ const meta = {
     valueAxis: {
       label: "Number (%)",
       formatter: (val) => `${val}%`,
+    },
+    formatters: {
+      value: (val) => `${val}%`,
     },
     data: [
       { category: "2025-01-01", value: 1 },
