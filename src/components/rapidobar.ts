@@ -230,12 +230,13 @@ export class Rapidobar extends LitElement {
         <div class="rpg-y-axis-labels">${yAxisLabelTemplates}</div>
         <div
           class="rpg-y-axis-line-container"
-          tabindex=${this.yAxisPosition === YAxisPosition.Left ? "1" : "0"}
+          tabindex="0"
           role="slider"
           aria-valuemin="0"
           aria-valuemax="100"
           aria-valuenow=${this._yAxisWidthPercentage}
           aria-valuetext=${this._yAxisWidthDescription}
+          aria-label=${`Y-axis positioned ${this.yAxisPosition}`}
           @dragstart=${noop}
           @pointerdown=${this.onYAxisPointerDown}
           @keydown=${this.onYAxisKeyDown}
@@ -310,7 +311,6 @@ export class Rapidobar extends LitElement {
                 @focus=${this.onBarContainerFocus}
                 @blur=${this.onBarContainerBlur}
                 @keydown=${this.onBarContainerKeyDown}
-                aria-orientation=${this.orientation}
               >
                 ${this.data.length
                   ? barTemplates
