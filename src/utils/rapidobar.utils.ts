@@ -34,6 +34,9 @@ export function checkIfSomePositiveAndNegative(
 export function checkIfAllPositiveOrNegative(
   values: number[] = [],
 ): [boolean, boolean] {
+  if (!values.length) {
+    return [false, false];
+  }
   const allPositive = values.every((value) => value >= 0);
   const allNegative = values.every((value) => value <= 0);
   return [allPositive, allNegative];
@@ -58,11 +61,14 @@ export function formatLabel<T extends string | number>(
  * @param {number} numOfTicks - Number of ticks for y-axis.
  * @returns {[number, number]} Min and max values in percentage form (0–100).
  */
-// TODO: number of ticks should be calculated dynamically for small values
 export function getMinAndMaxInPercentages(
   values: number[] = [],
   numOfTicks: number = 5,
 ): [number, number] {
+  if (!values.length) {
+    return [0, 0];
+  }
+
   const [hasPositive, hasNegative] = checkIfSomePositiveAndNegative(values);
 
   // TODO: check if correct
@@ -81,37 +87,65 @@ export function getMinAndMaxInPercentages(
 }
 
 /**
- * Generates a list of tick values for the y-axis based on
+ * Generates a list of tick values for the value axis based on
  * all the values and desired tick count.
  * @param {number} min - Minimum bar value.
  * @param {number} max - Maximum bar value.
- * @param {number} numOfTicks - Number of ticks for y-axis.
- * @param {number} decimals - Desired number of decimal places.
+ * @param {number} numOfTicks - Number of ticks for the axis.
+ * @param {number} granularity - Force the rough tick step to the next available increment.
  * @returns {number[]} An array of tick values evenly distributed across the range.
  */
 export function generateTicks(
   min: number = 0,
   max: number = 100,
   numOfTicks: number = 5,
-  decimals: number = 1,
+  granularity: number = 0.5,
 ): number[] {
-  const interval = (max - min) / (numOfTicks - 1);
+  if (numOfTicks <= 1) {
+    return [];
+  }
 
-  const tickValues = Array.from({ length: numOfTicks - 1 }, (_, i) => i).reduce(
-    (acc, tick) => {
-      // TODO (olja): revisit logic, acc.length should always be > 0
-      if (!acc.length) {
-        acc.push(min + interval);
-      } else {
-        acc.push(acc[tick]! + interval);
-      }
-      return acc;
-    },
-    [min],
-  );
+  let start = min;
+  let stop = max;
 
-  const power = Math.pow(10, decimals);
-  return tickValues.map((value) => Math.round(value * power) / power);
+  if (min === max) {
+    // expand the range equally by 10%
+    let offset = 1;
+    if (min !== 0) {
+      const magnitude = Math.pow(10, Math.floor(Math.log10(Math.abs(min))));
+      offset = magnitude * 0.1;
+    }
+    start = min - offset;
+    stop = min + offset;
+  }
+
+  let step = (stop - start) / (numOfTicks - 1);
+  if (step === 0) {
+    step = 1;
+  }
+  const power = Math.floor(Math.log10(step));
+  const magnitude = Math.pow(10, power);
+  const normalizedStep = step / magnitude;
+  const factor = Math.ceil(normalizedStep / granularity) * granularity;
+  const increment = parseFloat((factor * magnitude).toPrecision(12));
+
+  const decimalIndex = increment.toString().indexOf(".");
+  const decimals =
+    decimalIndex >= 0 ? increment.toString().length - decimalIndex - 1 : 0;
+
+  let axisMin;
+  if (start < 0 && stop > 0) {
+    axisMin = -Math.floor(numOfTicks / 2) * increment;
+  } else if (stop <= 0) {
+    axisMin = stop - increment * (numOfTicks - 1);
+  } else {
+    axisMin = start;
+  }
+
+  return Array.from({ length: numOfTicks }, (_, index) => {
+    const factor = Math.pow(10, decimals);
+    return Math.round((axisMin + index * increment) * factor) / factor;
+  });
 }
 
 /**
