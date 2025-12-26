@@ -60,7 +60,8 @@
   --_axis-title-bg-color-dark: var(--rpg-axis-title-color-dark);
   --_gridline-color-dark: var(--rpg-gridline-color-dark);
 
-  --_gridline-border: 1.5px solid transparent;
+  --_1_5px: 0.094rem;
+  --_gridline-border: var(--_1_5px) solid transparent;
   --_gridline-vertical-border-image: repeating-linear-gradient(
       to right,
       var(--_light-gridline-color) 0 6px,
@@ -116,15 +117,8 @@
       &.start-from-half .rpg-bar {
         grid-template-rows: repeat(2, minmax(0, 1fr));
 
-        .rpg-bar-content {
-          .positive & {
-            height: calc(var(--rpg-bar-size) + 1.5px);
-            margin-bottom: -1.5px;
-          }
-
-          .negative & {
-            grid-row-start: 2;
-          }
+        &.negative .rpg-bar-content {
+          grid-row-start: 2;
         }
       }
     }
@@ -134,7 +128,7 @@
     }
 
     .rpg-bar-content {
-      height: max(1.5px, var(--rpg-bar-size));
+      height: max(var(--_1_5px), var(--rpg-bar-size));
       width: 100%;
       container: verticalBar / size;
     }
@@ -190,6 +184,11 @@
         margin-top: var(--rpg-x-axis-height);
         margin-bottom: var(--rpg-scrollbar-width);
       }
+
+      .rpg-bar-container.start-from-half .rpg-bar.negative .rpg-bar-content {
+        height: calc(var(--rpg-bar-size) + var(--_1_5px));
+        margin-top: calc(var(--_1_5px) * -1);
+      }
     }
 
     /*VERTICAL + BOTTOM X-AXIS*/
@@ -217,6 +216,11 @@
         margin-bottom: calc(
           var(--rpg-x-axis-height) + var(--rpg-scrollbar-width)
         );
+      }
+
+      .rpg-bar-container.start-from-half .rpg-bar.positive .rpg-bar-content {
+        height: calc(var(--rpg-bar-size) + var(--_1_5px));
+        margin-bottom: calc(var(--_1_5px) * -1);
       }
     }
 
@@ -285,8 +289,8 @@
 
         &.positive .rpg-bar-content {
           grid-column-start: 2;
-          width: calc(var(--rpg-bar-size) + 1.5px);
-          margin-left: -1.5px;
+          width: calc(var(--rpg-bar-size) + var(--_1_5px));
+          margin-left: calc(var(--_1_5px) * -1);
         }
       }
     }
@@ -306,7 +310,7 @@
     }
 
     .rpg-bar-content {
-      width: max(1.5px, var(--rpg-bar-size));
+      width: max(var(--_1_5px), var(--rpg-bar-size));
       height: 100%;
       container: horizontalBar / size;
     }
@@ -431,7 +435,7 @@
 
   &.x-axis-top {
     .rpg-x-axis {
-      border-bottom: solid 1.5px var(--_gridline-color);
+      border-bottom: solid var(--_1_5px) var(--_gridline-color);
 
       .rpg-axis-title-content {
         translate: -50% calc(200% - 2px);
@@ -447,7 +451,7 @@
 
   &.x-axis-bottom {
     .rpg-x-axis {
-      border-top: solid 1.5px var(--_gridline-color);
+      border-top: solid var(--_1_5px) var(--_gridline-color);
 
       .rpg-axis-title-content {
         translate: -50% calc(-50% - 1px);

@@ -225,13 +225,14 @@ export class Rapidobar extends LitElement {
         <div class="rpg-axis-label" title=${label}>${label}</div>
       `);
     }
+
+    // tabindex matches flex order - visual and focus order are synchronized
     const yAxisTemplate = html`
       <div class="rpg-y-axis">
         <div class="rpg-y-axis-labels">${yAxisLabelTemplates}</div>
         <div
           class="rpg-y-axis-line-container"
           role="slider"
-          <!--tabindex matches flex order - visual and focus order are synchronized-->
           tabindex=${this.yAxisPosition === YAxisPosition.Left ? "1" : "0"}
           aria-valuemin="0"
           aria-valuemax="100"
@@ -242,13 +243,11 @@ export class Rapidobar extends LitElement {
           @pointerdown=${this.onYAxisPointerDown}
           @keydown=${this.onYAxisKeyDown}
         >
-          ${
-            yAxisConfig.label
-              ? html`<div class="rpg-axis-label rpg-axis-title">
-                  <div class="rpg-axis-title-content">${yAxisConfig.label}</div>
-                </div>`
-              : nothing
-          }
+          ${yAxisConfig.label
+            ? html`<div class="rpg-axis-label rpg-axis-title">
+                <div class="rpg-axis-title-content">${yAxisConfig.label}</div>
+              </div>`
+            : nothing}
           <div class="rpg-y-axis-line"></div>
         </div>
       </div>
