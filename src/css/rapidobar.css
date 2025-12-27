@@ -387,6 +387,11 @@
       .rpg-x-axis {
         margin-left: var(--rpg-y-axis-width);
         margin-right: var(--rpg-scrollbar-width);
+
+        .rpg-x-axis-labels {
+          margin-left: calc(var(--rpg-x-axis-first-label) / -2);
+          margin-right: calc(var(--rpg-x-axis-last-label) / -2);
+        }
       }
 
       .rpg-scrollable-content {

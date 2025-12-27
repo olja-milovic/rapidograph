@@ -15,7 +15,9 @@ import {
   MAX_Y_AXIS_WIDTH,
   MIN_Y_AXIS_WIDTH,
   SCROLLBAR_WIDTH_CSS_VAR,
+  X_AXIS_FIRST_LABEL_CSS_VAR,
   X_AXIS_HEIGHT_CSS_VAR,
+  X_AXIS_LAST_LABEL_CSS_VAR,
   Y_AXIS_WIDTH_CSS_VAR,
 } from "../constants.ts";
 import {
@@ -32,9 +34,10 @@ import {
   checkIfSomePositiveAndNegative,
   formatLabel,
   generateTicks,
-  getMinAndMaxInPercentages,
+  getMinAndMax,
   getScrollbarSize,
   getSizeInPercentages,
+  getTextWidth,
   getUpdatedYAxisWidth,
   noop,
 } from "../utils";
@@ -88,6 +91,10 @@ export class Rapidobar extends LitElement {
   @state()
   private _xAxisHeight: number = 0;
   @state()
+  private _firstXAxisLabelWidth: number = 0;
+  @state()
+  private _lastXAxisLabelWidth: number = 0;
+  @state()
   private _scrollbarSize: number = 0;
   @state()
   private _activeBar: HTMLElement | null = null;
@@ -116,9 +123,8 @@ export class Rapidobar extends LitElement {
       values[index] = value;
     });
     [this._categories, this._values] = [categories, values];
-    [this._minBarSize, this._maxBarSize] = getMinAndMaxInPercentages(
-      this._values,
-    );
+    [this._minBarSize, this._maxBarSize] = getMinAndMax(this._values);
+
     this._ticks = generateTicks(this._minBarSize, this._maxBarSize);
     [this._hasPositive, this._hasNegative] = checkIfSomePositiveAndNegative(
       this._values,
@@ -126,6 +132,7 @@ export class Rapidobar extends LitElement {
     [this._allPositive, this._allNegative] = checkIfAllPositiveOrNegative(
       this._values,
     );
+    this._calculateTickWidths();
   }
 
   @property({ type: Object, attribute: false })
@@ -170,6 +177,8 @@ export class Rapidobar extends LitElement {
       [Y_AXIS_WIDTH_CSS_VAR]: `${this._yAxisWidth}px`,
       [X_AXIS_HEIGHT_CSS_VAR]: `${this._xAxisHeight}px`,
       [DATA_LENGTH_CSS_VAR]: this._values.length,
+      [X_AXIS_FIRST_LABEL_CSS_VAR]: `${this._firstXAxisLabelWidth}px`,
+      [X_AXIS_LAST_LABEL_CSS_VAR]: `${this._lastXAxisLabelWidth}px`,
     };
   }
   private get _barContainerClasses() {
@@ -271,8 +280,8 @@ export class Rapidobar extends LitElement {
         this._allPositive || !this._allNegative ? value >= 0 : value > 0;
       const barSize = getSizeInPercentages(
         value,
-        this._minBarSize,
-        this._maxBarSize,
+        this._ticks[0],
+        this._ticks.at(-1),
       );
 
       barTemplates.push(
@@ -337,8 +346,7 @@ export class Rapidobar extends LitElement {
   protected firstUpdated(_changedProperties: PropertyValues): void {
     super.firstUpdated(_changedProperties);
 
-    [this._yAxisMinWidth, this._yAxisWidth, this._yAxisMaxWidth] =
-      this._calculateYAxisWidths();
+    this._calculateYAxisWidths();
     this.addObservers();
   }
 
@@ -348,19 +356,33 @@ export class Rapidobar extends LitElement {
     }
 
     if (changedProperties.get("orientation") || changedProperties.get("data")) {
-      [this._yAxisMinWidth, this._yAxisWidth, this._yAxisMaxWidth] =
-        this._calculateYAxisWidths();
+      this._calculateYAxisWidths();
     }
   }
 
-  private _calculateYAxisWidths(): number[] {
+  private _calculateYAxisWidths(): void {
     const isVertical = this.orientation === Orientation.Vertical;
-    return calculateYAxisWidths(
+    [this._yAxisMinWidth, this._yAxisWidth, this._yAxisMaxWidth] =
+      calculateYAxisWidths(
+        this._textSizeDiv,
+        this._wrapper,
+        this._yAxis,
+        isVertical ? this._ticks : this._categories,
+        isVertical ? this.valueAxis.formatter : this.categoryAxis.formatter,
+      );
+  }
+
+  private _calculateTickWidths(): void {
+    this._firstXAxisLabelWidth = getTextWidth(
       this._textSizeDiv,
-      this._wrapper,
-      this._yAxis,
-      isVertical ? this._ticks : this._categories,
-      isVertical ? this.valueAxis.formatter : this.categoryAxis.formatter,
+      formatLabel(this._ticks[0], this.valueAxis.formatter).toString(),
+    );
+    this._lastXAxisLabelWidth = getTextWidth(
+      this._textSizeDiv,
+      formatLabel(
+        this._ticks.at(-1) || "",
+        this.valueAxis.formatter,
+      ).toString(),
     );
   }
 
