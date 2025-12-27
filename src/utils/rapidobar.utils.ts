@@ -55,35 +55,23 @@ export function formatLabel<T extends string | number>(
 }
 
 /**
- * Computes the minimum and maximum values from the dataset
- * and returns them expressed as percentages.
+ * Computes the minimum and maximum values from the dataset.
  * @param {number[]} values - Array of numeric values.
- * @param {number} numOfTicks - Number of ticks for y-axis.
- * @returns {[number, number]} Min and max values in percentage form (0–100).
+ * @returns {[number, number]} Min and max values.
  */
-export function getMinAndMaxInPercentages(
-  values: number[] = [],
-  numOfTicks: number = 5,
-): [number, number] {
+export function getMinAndMax(values: number[] = []): [number, number] {
   if (!values.length) {
     return [0, 0];
   }
 
+  const minValue = Math.min(...values);
+  const maxValue = Math.max(...values);
   const [hasPositive, hasNegative] = checkIfSomePositiveAndNegative(values);
 
-  // TODO: check if correct
-  // calculate the next positive value divisible by the number of ticks
-  const maxValue = Math.abs(
-    (numOfTicks - 1) *
-      Math.ceil(
-        Math.max(
-          ...values.map((value) => Math.round(Math.abs(value) * 10) / 10),
-        ) /
-          (numOfTicks - 1),
-      ),
-  );
-
-  return [hasNegative ? -Math.abs(maxValue) : 0, hasPositive ? maxValue : 0];
+  if (hasPositive && hasNegative) {
+    return [-Math.abs(maxValue), maxValue];
+  }
+  return [minValue, maxValue];
 }
 
 /**
@@ -160,13 +148,19 @@ export function getSizeInPercentages(
   min: number = 0,
   max: number = 100,
 ): number {
-  if (value > 0) {
-    return (value * 100) / max;
+  if (min >= 0 && max >= 0) {
+    return ((value - min) / (max - min)) * 100;
   }
-  if (value < 0) {
-    return -(Math.abs(value) * 100) / Math.abs(min);
+
+  if (min <= 0 && max <= 0) {
+    return ((max - value) / (max - min)) * 100;
   }
-  return 0;
+
+  if (value >= 0) {
+    return (value / max) * 100;
+  } else {
+    return (Math.abs(value) / Math.abs(min)) * 100;
+  }
 }
 
 /**
