@@ -1,13 +1,3 @@
-import {
-  DEFAULT_Y_AXIS_WIDTH,
-  MAX_CONTENT_WIDTH,
-  MAX_Y_AXIS_WIDTH,
-  MIN_Y_AXIS_WIDTH,
-  Y_AXIS_LINE_WIDTH,
-  Y_AXIS_WIDTH_CSS_VAR,
-} from "../constants.ts";
-import { Orientation } from "../types";
-
 export function noop() {}
 export function echo<T extends string | number>(value: T): T {
   return value;
@@ -148,121 +138,27 @@ export function getSizeInPercentages(
   min: number = 0,
   max: number = 100,
 ): number {
-  if (min >= 0 && max >= 0) {
-    return ((value - min) / (max - min)) * 100;
-  }
+  const start = +min;
+  const stop = +max;
+  const val = +value;
 
-  if (min <= 0 && max <= 0) {
-    return ((max - value) / (max - min)) * 100;
-  }
-
-  if (value >= 0) {
-    return (value / max) * 100;
-  } else {
-    return (Math.abs(value) / Math.abs(min)) * 100;
-  }
-}
-
-/**
- * Calculates the size of the browser's scrollbar.
- * Useful for layout adjustments when dragging y-axis.
- * @param {Orientation} orientation - Chart orientation.
- * @param {HTMLElement} scrollableElement - Chart element that can be scrolled.
- * @returns {number} The scrollbar size in pixels.
- */
-export function getScrollbarSize(
-  orientation: Orientation,
-  scrollableElement: HTMLElement,
-): number {
-  let width = 0;
-  if (orientation === Orientation.Vertical) {
-    width = scrollableElement.offsetHeight - scrollableElement.clientHeight;
-  }
-  if (orientation === Orientation.Horizontal) {
-    width = scrollableElement.offsetWidth - scrollableElement.clientWidth;
-  }
-  return width;
-}
-
-/**
- * Measures the rendered width of a given text string in a specific font.
- * @param {HTMLElement} textSizeDiv - Existing element used to measure text size.
- * @param {string} text - The text to measure.
- * @returns {number} The width of the text in pixels.
- */
-export function getTextWidth(
-  textSizeDiv: HTMLElement,
-  text: string = "",
-): number {
-  if (!text || !textSizeDiv) {
+  if (start === 0 && stop === 0) {
     return 0;
   }
 
-  const content = document.createTextNode(text);
-  textSizeDiv.appendChild(content);
-  const width = Math.ceil(textSizeDiv.getBoundingClientRect().width);
-  textSizeDiv.replaceChildren();
-
-  return width;
-}
-
-/**
- * Calculates the width of the y-axis based on label content,
- * label formatting, tick labels, and any additional spacing.
- * @param {HTMLElement} textSizeDiv - Existing element used to measure text size.
- * @param {HTMLElement} wrapper - Chart wrapper element.
- * @param {HTMLElement} yAxis - Y-axis element.
- * @param {(string | number)[]} values - Either ticks or labels depending on the orientation.
- * @param formatter - Axis label formatter.
- * @returns {number} Y-axis width in pixels.
- */
-export function calculateYAxisWidths(
-  textSizeDiv: HTMLElement,
-  wrapper: HTMLElement,
-  yAxis: HTMLElement,
-  values: (string | number)[] = [],
-  formatter: (value: number | string) => string | number = echo,
-): number[] {
-  const result = new Map<string, number>([
-    ["min", MIN_Y_AXIS_WIDTH],
-    ["width", DEFAULT_Y_AXIS_WIDTH],
-    ["max", MAX_Y_AXIS_WIDTH],
-  ]);
-
-  if (values.length && !!textSizeDiv && !!wrapper && !!yAxis) {
-    // reset width when values change so that the new one is calculated correctly
-    yAxis.style.removeProperty("width");
-
-    const sortedValues = [...values].sort((a, b) => {
-      const strA = a.toString();
-      const strB = b.toString();
-      if (strB.length !== strA.length) {
-        return strB.length - strA.length;
-      }
-      return strB.localeCompare(strA);
-    });
-    const longestLabelWidth = getTextWidth(
-      textSizeDiv,
-      formatter(sortedValues[0]).toString(),
-    );
-    // margin 8px + 2px to avoid ellipsis = 6
-    let newWidth = longestLabelWidth + Y_AXIS_LINE_WIDTH + 6;
-    result.set("min", Math.min(newWidth, MIN_Y_AXIS_WIDTH));
-    result.set("max", Math.max(newWidth, MAX_Y_AXIS_WIDTH));
-
-    if (newWidth > DEFAULT_Y_AXIS_WIDTH) {
-      newWidth = DEFAULT_Y_AXIS_WIDTH;
-    }
-    if (newWidth > wrapper.offsetWidth - MAX_CONTENT_WIDTH) {
-      newWidth = wrapper.offsetWidth - MAX_CONTENT_WIDTH;
-    }
-
-    result.set("width", newWidth);
-    wrapper.style.setProperty(Y_AXIS_WIDTH_CSS_VAR, `${newWidth}px`);
-    yAxis.style.setProperty("width", `var(${Y_AXIS_WIDTH_CSS_VAR})`);
+  if (start >= 0 && stop >= 0) {
+    return ((val - start) / (stop - start)) * 100;
   }
 
-  return Array.from(result.values());
+  if (start <= 0 && stop <= 0) {
+    return ((stop - val) / (stop - start)) * 100;
+  }
+
+  if (val >= 0) {
+    return (val / stop) * 100;
+  } else {
+    return (Math.abs(val) / Math.abs(start)) * 100;
+  }
 }
 
 /**
@@ -285,10 +181,15 @@ export function getUpdatedYAxisWidth({
   maxWidth?: number;
   widthPercentage: number;
 }): number | null {
-  if (currentPercentage === widthPercentage) {
+  const curr = +currentPercentage;
+  const min = +minWidth;
+  const max = +maxWidth;
+  const width = +widthPercentage;
+
+  if (curr === width) {
     return null;
   }
-  const max = maxWidth - minWidth;
-  const absolute = (max * widthPercentage) / 100;
-  return absolute + minWidth;
+  const maxValue = max - min;
+  const absolute = (maxValue * width) / 100;
+  return absolute + min;
 }
