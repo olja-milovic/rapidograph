@@ -1,4 +1,4 @@
-import "../index";
+import "@components/rapido-bar";
 import "./rapidobar.css";
 import type {
   DataItem,
@@ -8,7 +8,7 @@ import type {
   ValueFormatters,
   XAxisPosition,
   YAxisPosition,
-} from "../types";
+} from "@types";
 
 import { classMap } from "lit/directives/class-map.js";
 import { html } from "lit";

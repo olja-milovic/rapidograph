@@ -1,4 +1,4 @@
-import "./tooltip.ts";
+import "@helpers/tooltip";
 import {
   DATA_LENGTH_CSS_VAR,
   DEFAULT_Y_AXIS_WIDTH,
@@ -9,7 +9,7 @@ import {
   X_AXIS_HEIGHT_CSS_VAR,
   X_AXIS_LAST_LABEL_CSS_VAR,
   Y_AXIS_WIDTH_CSS_VAR,
-} from "../constants.ts";
+} from "@utils/constants";
 import {
   type DataItem,
   Orientation,
@@ -18,7 +18,7 @@ import {
   type ValueFormatters,
   XAxisPosition,
   YAxisPosition,
-} from "../types";
+} from "@types";
 import {
   LitElement,
   type PropertyValues,
@@ -29,17 +29,19 @@ import {
 } from "lit";
 import {
   calculateYAxisWidths,
+  getScrollbarSize,
+  getTextWidth,
+} from "@utils/dom";
+import {
   checkIfAllPositiveOrNegative,
   checkIfSomePositiveAndNegative,
   formatLabel,
   generateTicks,
   getMinAndMax,
-  getScrollbarSize,
   getSizeInPercentages,
-  getTextWidth,
   getUpdatedYAxisWidth,
   noop,
-} from "../utils";
+} from "@utils/rapidobar";
 import {
   customElement,
   eventOptions,
@@ -50,8 +52,7 @@ import {
 } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { styleMap } from "lit/directives/style-map.js";
-// "?inline" makes Vite import CSS as a string instead of injecting it globally
-import styles from "../css/rapidobar.css?inline";
+import styles from "./rapidobar.css?inline";
 
 @customElement("rapido-bar")
 export class Rapidobar extends LitElement {
@@ -578,6 +579,6 @@ export class Rapidobar extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    rapidograph: Rapidobar;
+    "rapido-bar": Rapidobar;
   }
 }

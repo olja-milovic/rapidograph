@@ -1,12 +1,20 @@
 {
   "compilerOptions": {
     "target": "ES2022",
+    "module": "ESNext",
+    "types": ["vite/client"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "experimentalDecorators": true,
     "useDefineForClassFields": false,
-    "module": "ESNext",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"],
     "skipLibCheck": true,
+
+    "baseUrl": ".",
+    "paths": {
+      "@helpers/*": ["lib/helpers/*"],
+      "@utils/*": ["lib/utils/*"],
+      "@types": ["lib/types"],
+      "@components/*": ["lib/components/*"]
+    },
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -23,5 +31,6 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"]
+  "include": ["src", "lib"],
+  "exclude": ["node_modules", "dist"]
 }

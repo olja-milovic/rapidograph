@@ -5,9 +5,9 @@ import {
   MIN_Y_AXIS_WIDTH,
   Y_AXIS_LINE_WIDTH,
   Y_AXIS_WIDTH_CSS_VAR,
-} from "../constants.ts";
-import { Orientation } from "../types";
-import { echo } from "./rapidobar.utils.ts";
+} from "./constants.ts";
+import { Orientation } from "@types";
+import { echo } from "./rapidobar.ts";
 
 /**
  * Measures the rendered width of a given text string in a specific font.

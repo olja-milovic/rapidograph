@@ -16,7 +16,6 @@
   transform: translate(var(--x, 0), var(--y, 0));
   z-index: 2;
   inline-size: max-content;
-  /* TODO: not sure if ok size */
   max-inline-size: 25ch;
   font-size: 0.813rem;
   margin: 0;

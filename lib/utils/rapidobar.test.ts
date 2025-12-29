@@ -11,7 +11,7 @@ import {
   getSizeInPercentages,
   getUpdatedYAxisWidth,
   noop,
-} from "./index";
+} from "@utils/rapidobar.ts";
 import { describe, expect, it } from "vitest";
 import { fn } from "storybook/test";
 

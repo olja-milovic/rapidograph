@@ -1,10 +1,10 @@
 import { LitElement, css, html, unsafeCSS } from "lit";
-import { Orientation, Theme } from "../types";
+import { Orientation, Theme } from "@types";
 import { customElement, property, state } from "lit/decorators.js";
-import styles from "../css/tooltip.css?inline";
+import styles from "./tooltip.css?inline";
 
 @customElement("tool-tip")
-export class Tooltip extends LitElement {
+export class Index extends LitElement {
   static get styles() {
     return css`
       ${unsafeCSS(styles)}

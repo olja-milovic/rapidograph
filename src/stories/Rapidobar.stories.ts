@@ -5,7 +5,7 @@ import {
   Theme,
   XAxisPosition,
   YAxisPosition,
-} from "../types";
+} from "@types";
 import { Rapidobar, type RapidobarProps } from "./Rapidobar.ts";
 import type { StoryContext } from "storybook/internal/csf";
 
@@ -24,6 +24,21 @@ function getCurrencyFormatter(value: number = 0, limit = 10_000) {
       }),
   });
 }
+
+const sampleData = [
+  { category: "2025-01-01", value: 1250.5 },
+  { category: "2025-02-01", value: 980.0 },
+  { category: "2025-03-01", value: 3100.75 },
+  { category: "2025-04-01", value: -12450.0 },
+  { category: "2025-05-01", value: -6350.25 },
+  { category: "2025-06-01", value: -10120.0 },
+  { category: "2025-07-01", value: 5420.9 },
+  { category: "2025-08-01", value: 1100.0 },
+  { category: "2025-09-01", value: 0.0 },
+  { category: "2025-10-01", value: 12890.4 },
+  { category: "2025-11-01", value: -12000.0 },
+  { category: "2025-12-01", value: -950.75 },
+];
 
 const meta = {
   title: "Example/Rapidobar",
@@ -116,6 +131,12 @@ const meta = {
       },
     },
   },
+} satisfies Meta<RapidobarProps>;
+
+export default meta;
+type Story = StoryObj<RapidobarProps>;
+
+export const Demo: Story = {
   args: {
     orientation: Orientation.Vertical,
     theme: Theme.Light,
@@ -145,27 +166,8 @@ const meta = {
         return formatter.format(val);
       },
     },
-    data: [
-      { category: "2025-01-01", value: 1250.5 },
-      { category: "2025-02-01", value: 980.0 },
-      { category: "2025-03-01", value: 3100.75 },
-      { category: "2025-04-01", value: -12450.0 },
-      { category: "2025-05-01", value: -6350.25 },
-      { category: "2025-06-01", value: -10120.0 },
-      { category: "2025-07-01", value: 5420.9 },
-      { category: "2025-08-01", value: 1100.0 },
-      { category: "2025-09-01", value: 0.0 },
-      { category: "2025-10-01", value: 12890.4 },
-      { category: "2025-11-01", value: -12000.0 },
-      { category: "2025-12-01", value: -950.75 },
-    ],
+    data: sampleData,
   },
-} satisfies Meta<RapidobarProps>;
-
-export default meta;
-type Story = StoryObj<RapidobarProps>;
-
-export const Default: Story = {
   parameters: {
     docs: {
       source: {
