@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/web-components-vite";
-
 import {
   Orientation,
   ShowLabels,
@@ -8,6 +7,23 @@ import {
   YAxisPosition,
 } from "../types";
 import { Rapidobar, type RapidobarProps } from "./Rapidobar.ts";
+import type { StoryContext } from "storybook/internal/csf";
+
+function getCurrencyFormatter(value: number = 0, limit = 10_000) {
+  return new Intl.NumberFormat("en", {
+    style: "currency",
+    currency: "USD",
+    compactDisplay: "short",
+    currencyDisplay: "narrowSymbol",
+    unitDisplay: "narrow",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 1,
+    ...(limit > -1 &&
+      Math.abs(value) >= limit && {
+        notation: "compact",
+      }),
+  });
+}
 
 const meta = {
   title: "Example/Rapidobar",
@@ -66,25 +82,30 @@ const meta = {
         defaultValue: { summary: ShowLabels.Always },
       },
     },
-    categoryAxis: {
-      control: "object",
-      description: "Category axis title and *optional* label formatter",
+    categoryLabel: {
+      name: "category-label",
+      control: "text",
+      description: "Category axis label",
       table: {
-        defaultValue: { summary: "{}" },
+        defaultValue: { summary: "" },
       },
     },
-    valueAxis: {
-      control: "object",
-      description: "Value axis title and *optional* label formatter",
+    valueLabel: {
+      name: "value-label",
+      control: "text",
+      description: "Value axis label",
       table: {
-        defaultValue: { summary: "{}" },
+        defaultValue: { summary: "" },
       },
     },
     formatters: {
       control: "object",
-      description: "Bar values formatter",
+      description: "Axes, bar and tooltip values formatter",
       table: {
-        defaultValue: { summary: "{}" },
+        defaultValue: {
+          summary: "{}",
+        },
+        disable: false,
       },
     },
     data: {
@@ -102,35 +123,41 @@ const meta = {
     xAxisPosition: XAxisPosition.Bottom,
     tooltipTheme: Theme.Light,
     showLabels: ShowLabels.Always,
-    categoryAxis: {
-      label: "Month",
-      formatter: (isoDate) => {
+    categoryLabel: "Month",
+    valueLabel: "Number (%)",
+    formatters: {
+      category: (isoDate: string) => {
         const date = new Date(isoDate);
         const month = date.toLocaleString("en-US", { month: "short" });
         const year = date.getFullYear();
         return `${month} ${year}`;
       },
-    },
-    valueAxis: {
-      label: "Number (%)",
-      formatter: (val) => `${val}%`,
-    },
-    formatters: {
-      value: (val) => `${val}%`,
+      value: (val: number) => {
+        const formatter = getCurrencyFormatter(val);
+        return formatter.format(val);
+      },
+      data: (val: number) => {
+        const formatter = getCurrencyFormatter(val, 1_000);
+        return formatter.format(val);
+      },
+      tooltip: (val: number) => {
+        const formatter = getCurrencyFormatter(val, -1);
+        return formatter.format(val);
+      },
     },
     data: [
-      { category: "2025-01-01", value: 1 },
-      { category: "2025-02-01", value: 0 },
-      { category: "2025-03-01", value: 3 },
-      { category: "2025-04-01", value: -12 },
-      { category: "2025-05-01", value: -6 },
-      { category: "2025-06-01", value: -10 },
-      { category: "2025-07-01", value: 5 },
-      { category: "2025-08-01", value: 1 },
-      { category: "2025-09-01", value: 0 },
-      { category: "2025-10-01", value: 12 },
-      { category: "2025-11-01", value: -12 },
-      { category: "2025-12-01", value: -1 },
+      { category: "2025-01-01", value: 1250.5 },
+      { category: "2025-02-01", value: 980.0 },
+      { category: "2025-03-01", value: 3100.75 },
+      { category: "2025-04-01", value: -12450.0 },
+      { category: "2025-05-01", value: -6350.25 },
+      { category: "2025-06-01", value: -10120.0 },
+      { category: "2025-07-01", value: 5420.9 },
+      { category: "2025-08-01", value: 1100.0 },
+      { category: "2025-09-01", value: 0.0 },
+      { category: "2025-10-01", value: 12890.4 },
+      { category: "2025-11-01", value: -12000.0 },
+      { category: "2025-12-01", value: -950.75 },
     ],
   },
 } satisfies Meta<RapidobarProps>;
@@ -138,4 +165,35 @@ const meta = {
 export default meta;
 type Story = StoryObj<RapidobarProps>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  parameters: {
+    docs: {
+      source: {
+        transform: (_: string, { args }: StoryContext) => {
+          const {
+            orientation,
+            theme,
+            xAxisPosition,
+            yAxisPosition,
+            tooltipTheme,
+            showLabels,
+            categoryLabel,
+            valueLabel,
+          } = args;
+          return `
+            <rapido-bar
+              orientation="${orientation}"
+              theme="${theme}"
+              x-axis-position="${xAxisPosition}"
+              y-axis-position="${yAxisPosition}"
+              tooltip-theme="${tooltipTheme}"
+              show-labels="${showLabels}"
+              category-label="${categoryLabel}"
+              value-label="${valueLabel}"
+            ></rapido-bar>
+          `;
+        },
+      },
+    },
+  },
+};

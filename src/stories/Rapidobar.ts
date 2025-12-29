@@ -1,7 +1,6 @@
 import "../index";
 import "./rapidobar.css";
 import type {
-  AxisConfig,
   DataItem,
   Orientation,
   ShowLabels,
@@ -21,10 +20,10 @@ export interface RapidobarProps {
   yAxisPosition: YAxisPosition;
   tooltipTheme: Theme;
   showLabels: ShowLabels;
-  data: DataItem[];
-  categoryAxis: AxisConfig;
-  valueAxis: AxisConfig;
+  categoryLabel: string;
+  valueLabel: string;
   formatters: ValueFormatters;
+  data: DataItem[];
 }
 
 export const Rapidobar = ({
@@ -35,8 +34,8 @@ export const Rapidobar = ({
   tooltipTheme,
   showLabels,
   data,
-  categoryAxis,
-  valueAxis,
+  categoryLabel,
+  valueLabel,
   formatters,
 }: RapidobarProps) => {
   return html`
@@ -48,10 +47,10 @@ export const Rapidobar = ({
         y-axis-position=${yAxisPosition}
         tooltip-theme=${tooltipTheme}
         show-labels=${showLabels}
-        .data=${data}
-        .categoryAxis=${categoryAxis}
-        .valueAxis=${valueAxis}
+        category-label=${categoryLabel}
+        value-label=${valueLabel}
         .formatters=${formatters}
+        .data=${data}
       ></rapido-bar>
     </div>
   `;

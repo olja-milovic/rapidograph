@@ -1,2 +1,2 @@
 export * from "./enums";
-export type { DataItem, ValueFormatters, AxisConfig } from "./types";
+export type { DataItem, ValueFormatters } from "./types";

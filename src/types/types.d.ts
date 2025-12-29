@@ -1,16 +1,12 @@
 export type DataItem = {
-  category: string;
+  category: string | number;
   value: number;
 };
 
-export type AxisConfig = {
-  label: string;
-  formatter?: (value: number | string) => string | number;
+type FormatterFn<T extends string | number> = (value: T) => string | number;
+export type ValueFormatters = {
+  category?: FormatterFn;
+  value?: FormatterFn;
+  data?: FormatterFn;
+  tooltip?: FormatterFn;
 };
-
-export type ValueFormatters = Partial<
-  Record<
-    Exclude<keyof DataItem, "category">,
-    (value: number) => string | number
-  >
->;

@@ -79,17 +79,19 @@ export function calculateYAxisWidths(
     // reset width when values change so that the new one is calculated correctly
     yAxis.style.removeProperty("width");
 
-    const sortedValues = [...values].sort((a, b) => {
-      const strA = a.toString();
-      const strB = b.toString();
-      if (strB.length !== strA.length) {
-        return strB.length - strA.length;
-      }
-      return strB.localeCompare(strA);
-    });
+    const sortedValues = [...values.map((value) => formatter(value))].sort(
+      (a, b) => {
+        const strA = a.toString();
+        const strB = b.toString();
+        if (strB.length !== strA.length) {
+          return strB.length - strA.length;
+        }
+        return strB.localeCompare(strA);
+      },
+    );
     const longestLabelWidth = getTextWidth(
       textSizeDiv,
-      formatter(sortedValues[0]).toString(),
+      sortedValues[0].toString(),
     );
     // margin 8px + 2px to avoid ellipsis = 6
     let newWidth = longestLabelWidth + Y_AXIS_LINE_WIDTH + 6;

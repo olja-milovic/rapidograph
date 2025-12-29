@@ -31,13 +31,9 @@
         ];
         rapidograph.formatters = {
           value: (value) => `${value}%`,
-        };
-        rapidograph.categoryAxis = {
-          label: "Month",
-        };
-        rapidograph.valueAxis = {
-          label: "Number (%)",
-          formatter: (val) => `${val}%`,
+          formatter: (value) => `${value}%`,
+          data: (value) => `${value}%`,
+          tooltip: (value) => `${value} percent`,
         };
       };
     </script>
@@ -51,10 +47,12 @@
     ">
       <rapido-bar
         orientation="vertical"
-        x-axis-position="top"
+        x-axis-position="bottom"
         y-axis-position="left"
         theme="light"
         show-labels="always"
+        category-label="Month"
+        value-label="Number (%)"
       ></rapido-bar>
     </main>
   </body>

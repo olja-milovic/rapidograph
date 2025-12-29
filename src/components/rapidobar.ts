@@ -1,15 +1,5 @@
 import "./tooltip.ts";
 import {
-  type AxisConfig,
-  type DataItem,
-  Orientation,
-  ShowLabels,
-  Theme,
-  type ValueFormatters,
-  XAxisPosition,
-  YAxisPosition,
-} from "../types";
-import {
   DATA_LENGTH_CSS_VAR,
   DEFAULT_Y_AXIS_WIDTH,
   MAX_Y_AXIS_WIDTH,
@@ -20,6 +10,15 @@ import {
   X_AXIS_LAST_LABEL_CSS_VAR,
   Y_AXIS_WIDTH_CSS_VAR,
 } from "../constants.ts";
+import {
+  type DataItem,
+  Orientation,
+  ShowLabels,
+  Theme,
+  type ValueFormatters,
+  XAxisPosition,
+  YAxisPosition,
+} from "../types";
 import {
   LitElement,
   type PropertyValues,
@@ -63,7 +62,7 @@ export class Rapidobar extends LitElement {
   }
 
   private _data: DataItem[] = [];
-  private _categories: string[] = [];
+  private _categories: (string | number)[] = [];
   private _values: number[] = [];
   private _ticks: number[] = [];
   private _minBarSize: number = 0;
@@ -116,7 +115,7 @@ export class Rapidobar extends LitElement {
     this.requestUpdate("data", oldValue);
 
     const length = this._data.length;
-    const categories = new Array<string>(length);
+    const categories = new Array<string | number>(length);
     const values = new Array<number>(length);
     this.data.forEach(({ category, value }, index) => {
       categories[index] = category;
@@ -135,12 +134,6 @@ export class Rapidobar extends LitElement {
   }
 
   @property({ type: Object, attribute: false })
-  categoryAxis: AxisConfig = { label: "" };
-
-  @property({ type: Object, attribute: false })
-  valueAxis: AxisConfig = { label: "" };
-
-  @property({ type: Object, attribute: false })
   formatters: ValueFormatters = {};
 
   @property({ type: Orientation })
@@ -157,6 +150,12 @@ export class Rapidobar extends LitElement {
 
   @property({ type: Theme, attribute: "tooltip-theme" })
   tooltipTheme = Theme.Light;
+
+  @property({ type: String, attribute: "category-label" })
+  categoryLabel: string = "";
+
+  @property({ type: String, attribute: "value-label" })
+  valueLabel: string = "";
 
   @property({ type: ShowLabels, attribute: "show-labels" })
   showLabels = ShowLabels.Always;
@@ -208,27 +207,33 @@ export class Rapidobar extends LitElement {
     const yAxisLabelTemplates = [];
     const xAxisValues = isVertical ? this._categories : this._ticks;
     const yAxisValues = isVertical ? this._ticks : this._categories;
-    const xAxisConfig = isVertical ? this.categoryAxis : this.valueAxis;
-    const yAxisConfig = isVertical ? this.valueAxis : this.categoryAxis;
+    const xAxisLabel = isVertical ? this.categoryLabel : this.valueLabel;
+    const xAxisFormatter = isVertical
+      ? this.formatters.category
+      : this.formatters.value;
+    const yAxisLabel = isVertical ? this.valueLabel : this.categoryLabel;
+    const yAxisFormatter = isVertical
+      ? this.formatters.value
+      : this.formatters.category;
 
     for (const item of xAxisValues) {
-      const label = formatLabel(item, xAxisConfig.formatter);
+      const label = formatLabel(item, xAxisFormatter);
       xAxisLabelTemplates.push(html`
         <div class="rpg-axis-label" title=${label}>${label}</div>
       `);
     }
     const xAxisTemplate = html`
       <div class="rpg-x-axis">
-        ${xAxisConfig.label
+        ${xAxisLabel
           ? html`<div class="rpg-axis-label rpg-axis-title">
-              <div class="rpg-axis-title-content">${xAxisConfig.label}</div>
+              <div class="rpg-axis-title-content">${xAxisLabel}</div>
             </div>`
           : nothing}
         <div class="rpg-x-axis-labels">${xAxisLabelTemplates}</div>
       </div>
     `;
     for (const item of yAxisValues) {
-      const label = formatLabel(item, yAxisConfig.formatter);
+      const label = formatLabel(item, yAxisFormatter);
       yAxisLabelTemplates.push(html`
         <div class="rpg-axis-label" title=${label}>${label}</div>
       `);
@@ -251,9 +256,9 @@ export class Rapidobar extends LitElement {
           @pointerdown=${this.onYAxisPointerDown}
           @keydown=${this.onYAxisKeyDown}
         >
-          ${yAxisConfig.label
+          ${yAxisLabel
             ? html`<div class="rpg-axis-label rpg-axis-title">
-                <div class="rpg-axis-title-content">${yAxisConfig.label}</div>
+                <div class="rpg-axis-title-content">${yAxisLabel}</div>
               </div>`
             : nothing}
           <div class="rpg-y-axis-line"></div>
@@ -269,12 +274,14 @@ export class Rapidobar extends LitElement {
     const barTemplates = [];
     for (const [index, { category, value }] of this.data.entries()) {
       const isFocused = index === this._focusedBarIndex;
-      const formatterCategory = formatLabel(
-        category,
-        this.categoryAxis.formatter,
+      const formattedCategory = formatLabel(category, this.formatters.category);
+      const formattedAxisValue = formatLabel(value, this.formatters.value);
+      const formattedBarValue = formatLabel(value, this.formatters.data);
+      const formattedTooltipValue = formatLabel(
+        value,
+        this.formatters.tooltip || this.formatters.value,
       );
-      const formattedAxisValue = formatLabel(value, this.valueAxis.formatter);
-      const formattedBarValue = formatLabel(value, this.formatters?.value);
+
       const isPositive =
         this._allPositive || !this._allNegative ? value >= 0 : value > 0;
       const barSize = getSizeInPercentages(
@@ -288,9 +295,9 @@ export class Rapidobar extends LitElement {
           class="rpg-bar ${isPositive ? "positive" : "negative"}"
           tabindex=${isFocused ? 0 : -1}
           aria-current=${isFocused ? "true" : "false"}
-          aria-label="${formatterCategory}: ${formattedAxisValue}"
-          data-category=${formatterCategory}
-          data-value=${formattedAxisValue}
+          aria-label="${formattedCategory}: ${formattedAxisValue}"
+          data-category=${formattedCategory}
+          data-value=${formattedTooltipValue}
         >
           <div
             class="rpg-bar-content"
@@ -367,21 +374,18 @@ export class Rapidobar extends LitElement {
         this._wrapper,
         this._yAxis,
         isVertical ? this._ticks : this._categories,
-        isVertical ? this.valueAxis.formatter : this.categoryAxis.formatter,
+        isVertical ? this.formatters.value : this.formatters.category,
       );
   }
 
   private _calculateTickWidths(): void {
     this._firstXAxisLabelWidth = getTextWidth(
       this._textSizeDiv,
-      formatLabel(this._ticks[0], this.valueAxis.formatter).toString(),
+      formatLabel(this._ticks[0], this.formatters.value).toString(),
     );
     this._lastXAxisLabelWidth = getTextWidth(
       this._textSizeDiv,
-      formatLabel(
-        this._ticks.at(-1) || "",
-        this.valueAxis.formatter,
-      ).toString(),
+      formatLabel(this._ticks.at(-1) || "", this.formatters.value).toString(),
     );
   }
 
