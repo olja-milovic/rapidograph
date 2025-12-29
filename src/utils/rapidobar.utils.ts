@@ -59,7 +59,8 @@ export function getMinAndMax(values: number[] = []): [number, number] {
   const [hasPositive, hasNegative] = checkIfSomePositiveAndNegative(values);
 
   if (hasPositive && hasNegative) {
-    return [-Math.abs(maxValue), maxValue];
+    const max = Math.max(Math.abs(minValue), Math.abs(maxValue));
+    return [-Math.abs(max), max];
   }
   return [minValue, maxValue];
 }

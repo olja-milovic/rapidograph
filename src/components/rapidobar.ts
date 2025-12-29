@@ -124,7 +124,6 @@ export class Rapidobar extends LitElement {
     });
     [this._categories, this._values] = [categories, values];
     [this._minBarSize, this._maxBarSize] = getMinAndMax(this._values);
-
     this._ticks = generateTicks(this._minBarSize, this._maxBarSize);
     [this._hasPositive, this._hasNegative] = checkIfSomePositiveAndNegative(
       this._values,

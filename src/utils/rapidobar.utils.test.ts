@@ -120,7 +120,7 @@ describe("getMinAndMax", () => {
     const randomArray = [...Array(50)].map(
       () => Math.floor(Math.random() * 10001) - 5000,
     );
-    const max = Math.max(...randomArray);
+    const max = Math.max(...randomArray.map(Math.abs));
     expect(getMinAndMax(randomArray)).toEqual([-max, max]);
   });
 });
