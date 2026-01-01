@@ -16,7 +16,7 @@ export default defineConfig({
       {
         test: {
           name: "unit",
-          include: ["src/**/*.test.ts"],
+          include: ["lib/**/*.test.ts"],
           exclude: ["src/**/*.stories.ts"],
         },
       },

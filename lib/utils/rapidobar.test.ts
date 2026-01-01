@@ -6,12 +6,13 @@ import {
   checkIfSomePositiveAndNegative,
   echo,
   formatLabel,
+  formatLabels,
   generateTicks,
   getMinAndMax,
   getSizeInPercentages,
   getUpdatedYAxisWidth,
   noop,
-} from "@utils/rapidobar.ts";
+} from "./rapidobar";
 import { describe, expect, it } from "vitest";
 import { fn } from "storybook/test";
 
@@ -92,6 +93,31 @@ describe("formatLabel", () => {
   it("should return the original label if no formatter is provided", () => {
     expect(formatLabel("test")).toEqual("test");
     expect(formatLabel(42)).toEqual(42);
+  });
+});
+
+describe("formatLabels", () => {
+  it("should use the label formatter if it exists", () => {
+    const customFormatter = fn((value) => `Formatted: ${value}`);
+
+    const result = formatLabels(["test1", "test2"], customFormatter);
+    expect(customFormatter).toHaveBeenCalledWith("test1");
+    expect(customFormatter).toHaveBeenCalledWith("test2");
+    expect(result).toEqual(["Formatted: test1", "Formatted: test2"]);
+  });
+
+  it("should use a numeric label formatter", () => {
+    const customFormatter = fn((value) => value * 10);
+
+    const result = formatLabels([42, 83], customFormatter);
+    expect(customFormatter).toHaveBeenCalledWith(42);
+    expect(customFormatter).toHaveBeenCalledWith(83);
+    expect(result).toEqual([420, 830]);
+  });
+
+  it("should return the original label if no formatter is provided", () => {
+    expect(formatLabels(["test1", "test2"])).toEqual(["test1", "test2"]);
+    expect(formatLabels([42, 83])).toEqual([42, 83]);
   });
 });
 
