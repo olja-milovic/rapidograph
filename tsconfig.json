@@ -8,14 +8,6 @@
     "useDefineForClassFields": false,
     "skipLibCheck": true,
 
-    "baseUrl": ".",
-    "paths": {
-      "@helpers/*": ["lib/helpers/*"],
-      "@utils/*": ["lib/utils/*"],
-      "@types": ["lib/types"],
-      "@components/*": ["lib/components/*"]
-    },
-
     /* Bundler mode */
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
