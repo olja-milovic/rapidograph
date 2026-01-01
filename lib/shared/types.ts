@@ -3,7 +3,7 @@ export type DataItem = {
   value: number;
 };
 
-type FormatterFn<T extends string | number> = (value: T) => string | number;
+type FormatterFn = (value: string | number) => string | number;
 export type ValueFormatters = {
   category?: FormatterFn;
   value?: FormatterFn;

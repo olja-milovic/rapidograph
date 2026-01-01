@@ -92,6 +92,8 @@
   --rpg-scrollbar-width: 0;
   --rpg-bar-size: 0;
   --rpg-ticks-length: 5;
+  --rpg-x-axis-first-label: 0;
+  --rpg-x-axis-last-label: 0;
 
   display: grid;
   height: 100%;
@@ -143,6 +145,10 @@
     .rpg-small-bar-label {
       width: 100%;
       justify-content: center;
+    }
+
+    .rpg-x-axis .rpg-axis-title {
+      left: 50%;
     }
 
     .rpg-x-axis-labels {
@@ -328,10 +334,6 @@
       align-items: center;
     }
 
-    .rpg-x-axis .rpg-axis-title-content {
-      margin-left: calc(var(--rpg-y-axis-width) / 2);
-    }
-
     .rpg-x-axis-labels {
       display: flex;
       justify-content: space-between;
@@ -392,6 +394,14 @@
           margin-left: calc(var(--rpg-x-axis-first-label) / -2);
           margin-right: calc(var(--rpg-x-axis-last-label) / -2);
         }
+
+        .rpg-axis-title {
+          left: 50%;
+        }
+
+        .rpg-axis-title-content {
+          margin-left: calc(var(--rpg-y-axis-width) / 2);
+        }
       }
 
       .rpg-scrollable-content {
@@ -407,6 +417,15 @@
         margin-right: calc(
           var(--rpg-y-axis-width) + var(--rpg-scrollbar-width)
         );
+
+        .rpg-axis-title {
+          width: 50%;
+          translate: 100% 0;
+        }
+
+        .rpg-axis-title-content {
+          margin-right: calc(var(--rpg-y-axis-width) / 2);
+        }
       }
 
       .rpg-y-axis {
@@ -596,10 +615,6 @@
 .rpg-x-axis {
   position: relative;
   z-index: 1;
-
-  .rpg-axis-title {
-    left: 50%;
-  }
 
   .rpg-axis-title-content:after {
     height: 2px;
