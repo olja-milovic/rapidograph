@@ -45,6 +45,19 @@ export function formatLabel<T extends string | number>(
 }
 
 /**
+ * Use label formatter if it exists, or return the original labels.
+ * @param {string | number} labels - Axis or bar labels.
+ * @param [formatter=echo] - Axis or bar label formatter.
+ * @returns {(string | number)[]} - Formatted labels.
+ */
+export function formatLabels<T extends string | number>(
+  labels: T[],
+  formatter: (value: T) => string | number = echo,
+): (string | number)[] {
+  return labels.map((label) => formatLabel(label, formatter));
+}
+
+/**
  * Computes the minimum and maximum values from the dataset.
  * @param {number[]} values - Array of numeric values.
  * @returns {[number, number]} Min and max values.

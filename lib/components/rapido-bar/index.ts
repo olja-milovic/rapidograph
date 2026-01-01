@@ -1,24 +1,21 @@
-import "@helpers/tooltip";
 import {
   DATA_LENGTH_CSS_VAR,
   DEFAULT_Y_AXIS_WIDTH,
+  type DataItem,
   MAX_Y_AXIS_WIDTH,
   MIN_Y_AXIS_WIDTH,
-  SCROLLBAR_WIDTH_CSS_VAR,
-  X_AXIS_FIRST_LABEL_CSS_VAR,
-  X_AXIS_HEIGHT_CSS_VAR,
-  X_AXIS_LAST_LABEL_CSS_VAR,
-  Y_AXIS_WIDTH_CSS_VAR,
-} from "@utils/constants";
-import {
-  type DataItem,
   Orientation,
+  SCROLLBAR_WIDTH_CSS_VAR,
   ShowLabels,
   Theme,
   type ValueFormatters,
   XAxisPosition,
+  X_AXIS_FIRST_LABEL_CSS_VAR,
+  X_AXIS_HEIGHT_CSS_VAR,
+  X_AXIS_LAST_LABEL_CSS_VAR,
   YAxisPosition,
-} from "@types";
+  Y_AXIS_WIDTH_CSS_VAR,
+} from "../../shared";
 import {
   LitElement,
   type PropertyValues,
@@ -29,19 +26,18 @@ import {
 } from "lit";
 import {
   calculateYAxisWidths,
-  getScrollbarSize,
-  getTextWidth,
-} from "@utils/dom";
-import {
   checkIfAllPositiveOrNegative,
   checkIfSomePositiveAndNegative,
   formatLabel,
+  formatLabels,
   generateTicks,
   getMinAndMax,
+  getScrollbarSize,
   getSizeInPercentages,
+  getTextWidth,
   getUpdatedYAxisWidth,
   noop,
-} from "@utils/rapidobar";
+} from "../../utils";
 import {
   customElement,
   eventOptions,
@@ -50,6 +46,7 @@ import {
   queryAll,
   state,
 } from "lit/decorators.js";
+import { Tooltip } from "../../helpers/tooltip";
 import { classMap } from "lit/directives/class-map.js";
 import { styleMap } from "lit/directives/style-map.js";
 import styles from "./rapidobar.css?inline";
@@ -63,11 +60,9 @@ export class Rapidobar extends LitElement {
   }
 
   private _data: DataItem[] = [];
-  private _categories: (string | number)[] = [];
-  private _values: number[] = [];
+  private _categoryLabels: (string | number)[] = [];
   private _ticks: number[] = [];
-  private _minBarSize: number = 0;
-  private _maxBarSize: number = 100;
+  private _tickLabels: (string | number)[] = [];
   private _hasPositive: boolean = true;
   private _hasNegative: boolean = false;
   private _allPositive: boolean = true;
@@ -116,21 +111,20 @@ export class Rapidobar extends LitElement {
     this.requestUpdate("data", oldValue);
 
     const length = this._data.length;
-    const categories = new Array<string | number>(length);
+    const categories = new Array<string>(length);
     const values = new Array<number>(length);
     this.data.forEach(({ category, value }, index) => {
       categories[index] = category;
       values[index] = value;
     });
-    [this._categories, this._values] = [categories, values];
-    [this._minBarSize, this._maxBarSize] = getMinAndMax(this._values);
-    this._ticks = generateTicks(this._minBarSize, this._maxBarSize);
-    [this._hasPositive, this._hasNegative] = checkIfSomePositiveAndNegative(
-      this._values,
-    );
-    [this._allPositive, this._allNegative] = checkIfAllPositiveOrNegative(
-      this._values,
-    );
+    this._categoryLabels = formatLabels(categories, this.formatters.category);
+    const [minBarSize, maxBarSize] = getMinAndMax(values);
+    this._ticks = generateTicks(minBarSize, maxBarSize);
+    this._tickLabels = formatLabels(this._ticks, this.formatters.value);
+    [this._hasPositive, this._hasNegative] =
+      checkIfSomePositiveAndNegative(values);
+    [this._allPositive, this._allNegative] =
+      checkIfAllPositiveOrNegative(values);
     this._calculateTickWidths();
   }
 
@@ -175,7 +169,7 @@ export class Rapidobar extends LitElement {
       [SCROLLBAR_WIDTH_CSS_VAR]: `${this._scrollbarSize}px`,
       [Y_AXIS_WIDTH_CSS_VAR]: `${this._yAxisWidth}px`,
       [X_AXIS_HEIGHT_CSS_VAR]: `${this._xAxisHeight}px`,
-      [DATA_LENGTH_CSS_VAR]: this._values.length,
+      [DATA_LENGTH_CSS_VAR]: this.data.length,
       [X_AXIS_FIRST_LABEL_CSS_VAR]: `${this._firstXAxisLabelWidth}px`,
       [X_AXIS_LAST_LABEL_CSS_VAR]: `${this._lastXAxisLabelWidth}px`,
     };
@@ -204,21 +198,20 @@ export class Rapidobar extends LitElement {
 
   render() {
     const isVertical = this.orientation === Orientation.Vertical;
-    const xAxisLabelTemplates = [];
-    const yAxisLabelTemplates = [];
-    const xAxisValues = isVertical ? this._categories : this._ticks;
-    const yAxisValues = isVertical ? this._ticks : this._categories;
     const xAxisLabel = isVertical ? this.categoryLabel : this.valueLabel;
-    const xAxisFormatter = isVertical
-      ? this.formatters.category
-      : this.formatters.value;
     const yAxisLabel = isVertical ? this.valueLabel : this.categoryLabel;
-    const yAxisFormatter = isVertical
-      ? this.formatters.value
-      : this.formatters.category;
+    let xAxisLabels;
+    let yAxisLabels;
+    if (isVertical) {
+      xAxisLabels = this._categoryLabels;
+      yAxisLabels = this._tickLabels;
+    } else {
+      xAxisLabels = this._tickLabels;
+      yAxisLabels = this._categoryLabels;
+    }
 
-    for (const item of xAxisValues) {
-      const label = formatLabel(item, xAxisFormatter);
+    const xAxisLabelTemplates = [];
+    for (const label of xAxisLabels) {
       xAxisLabelTemplates.push(html`
         <div class="rpg-axis-label" title=${label}>${label}</div>
       `);
@@ -233,8 +226,9 @@ export class Rapidobar extends LitElement {
         <div class="rpg-x-axis-labels">${xAxisLabelTemplates}</div>
       </div>
     `;
-    for (const item of yAxisValues) {
-      const label = formatLabel(item, yAxisFormatter);
+
+    const yAxisLabelTemplates = [];
+    for (const label of yAxisLabels) {
       yAxisLabelTemplates.push(html`
         <div class="rpg-axis-label" title=${label}>${label}</div>
       `);
@@ -273,12 +267,12 @@ export class Rapidobar extends LitElement {
     }
 
     const barTemplates = [];
-    for (const [index, { category, value }] of this.data.entries()) {
+    for (const [index, { value }] of this.data.entries()) {
       const isFocused = index === this._focusedBarIndex;
-      const formattedCategory = formatLabel(category, this.formatters.category);
-      const formattedAxisValue = formatLabel(value, this.formatters.value);
-      const formattedBarValue = formatLabel(value, this.formatters.data);
-      const formattedTooltipValue = formatLabel(
+      const category = this._categoryLabels[index];
+      const axisValue = this._tickLabels[index];
+      const barValue = formatLabel(value, this.formatters.data);
+      const tooltipValue = formatLabel(
         value,
         this.formatters.tooltip || this.formatters.value,
       );
@@ -296,16 +290,16 @@ export class Rapidobar extends LitElement {
           class="rpg-bar ${isPositive ? "positive" : "negative"}"
           tabindex=${isFocused ? 0 : -1}
           aria-current=${isFocused ? "true" : "false"}
-          aria-label="${formattedCategory}: ${formattedAxisValue}"
-          data-category=${formattedCategory}
-          data-value=${formattedTooltipValue}
+          aria-label="${category}: ${axisValue}"
+          data-category=${category}
+          data-value=${tooltipValue}
         >
           <div
             class="rpg-bar-content"
             style="--rpg-bar-size: ${Math.abs(barSize)}%;"
           >
-            <div class="rpg-bar-label">${formattedBarValue}</div>
-            <div class="rpg-small-bar-label">${formattedBarValue}</div>
+            <div class="rpg-bar-label">${barValue}</div>
+            <div class="rpg-small-bar-label">${barValue}</div>
           </div>
         </li>`,
       );
@@ -350,6 +344,13 @@ export class Rapidobar extends LitElement {
     `;
   }
 
+  connectedCallback(): void {
+    super.connectedCallback();
+    if (!customElements.get("tool-tip")) {
+      customElements.define("tool-tip", Tooltip);
+    }
+  }
+
   protected firstUpdated(_changedProperties: PropertyValues): void {
     super.firstUpdated(_changedProperties);
 
@@ -374,19 +375,18 @@ export class Rapidobar extends LitElement {
         this._textSizeDiv,
         this._wrapper,
         this._yAxis,
-        isVertical ? this._ticks : this._categories,
-        isVertical ? this.formatters.value : this.formatters.category,
+        isVertical ? this._tickLabels : this._categoryLabels,
       );
   }
 
   private _calculateTickWidths(): void {
     this._firstXAxisLabelWidth = getTextWidth(
       this._textSizeDiv,
-      formatLabel(this._ticks[0], this.formatters.value).toString(),
+      this._tickLabels[0].toString(),
     );
     this._lastXAxisLabelWidth = getTextWidth(
       this._textSizeDiv,
-      formatLabel(this._ticks.at(-1) || "", this.formatters.value).toString(),
+      this._tickLabels.at(-1)?.toString(),
     );
   }
 

@@ -3,11 +3,10 @@ import {
   MAX_CONTENT_WIDTH,
   MAX_Y_AXIS_WIDTH,
   MIN_Y_AXIS_WIDTH,
+  Orientation,
   Y_AXIS_LINE_WIDTH,
   Y_AXIS_WIDTH_CSS_VAR,
-} from "./constants.ts";
-import { Orientation } from "@types";
-import { echo } from "./rapidobar.ts";
+} from "../shared";
 
 /**
  * Measures the rendered width of a given text string in a specific font.
@@ -58,16 +57,14 @@ export function getScrollbarSize(
  * @param {HTMLElement} textSizeDiv - Existing element used to measure text size.
  * @param {HTMLElement} wrapper - Chart wrapper element.
  * @param {HTMLElement} yAxis - Y-axis element.
- * @param {(string | number)[]} values - Either ticks or labels depending on the orientation.
- * @param formatter - Axis label formatter.
+ * @param {(string | number)[]} formattedValues - Formatted ticks or labels (depending on the orientation).
  * @returns {number} Y-axis width in pixels.
  */
-export function calculateYAxisWidths(
+export function calculateYAxisWidths<T extends string | number>(
   textSizeDiv: HTMLElement,
   wrapper: HTMLElement,
   yAxis: HTMLElement,
-  values: (string | number)[] = [],
-  formatter: (value: number | string) => string | number = echo,
+  formattedValues: T[] = [],
 ): number[] {
   const result = new Map<string, number>([
     ["min", MIN_Y_AXIS_WIDTH],
@@ -75,20 +72,18 @@ export function calculateYAxisWidths(
     ["max", MAX_Y_AXIS_WIDTH],
   ]);
 
-  if (values.length && !!textSizeDiv && !!wrapper && !!yAxis) {
+  if (formattedValues.length && !!textSizeDiv && !!wrapper && !!yAxis) {
     // reset width when values change so that the new one is calculated correctly
     yAxis.style.removeProperty("width");
 
-    const sortedValues = [...values.map((value) => formatter(value))].sort(
-      (a, b) => {
-        const strA = a.toString();
-        const strB = b.toString();
-        if (strB.length !== strA.length) {
-          return strB.length - strA.length;
-        }
-        return strB.localeCompare(strA);
-      },
-    );
+    const sortedValues = [...formattedValues].sort((a, b) => {
+      const strA = a.toString();
+      const strB = b.toString();
+      if (strB.length !== strA.length) {
+        return strB.length - strA.length;
+      }
+      return strB.localeCompare(strA);
+    });
     const longestLabelWidth = getTextWidth(
       textSizeDiv,
       sortedValues[0].toString(),

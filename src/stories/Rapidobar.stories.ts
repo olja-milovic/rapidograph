@@ -5,8 +5,8 @@ import {
   Theme,
   XAxisPosition,
   YAxisPosition,
-} from "@types";
-import { Rapidobar, type RapidobarProps } from "./Rapidobar.ts";
+} from "../../lib";
+import { RapidoBar, type RapidobarProps } from "./Rapidobar.ts";
 import type { StoryContext } from "storybook/internal/csf";
 
 function getCurrencyFormatter(value: number = 0, limit = 10_000) {
@@ -43,7 +43,7 @@ const sampleData = [
 const meta = {
   title: "Example/Rapidobar",
   tags: ["autodocs"],
-  render: (args) => Rapidobar(args),
+  render: (args) => RapidoBar(args),
   argTypes: {
     orientation: {
       control: "radio",

@@ -1,12 +1,12 @@
 export type DataItem = {
-  category: string | number;
+  category: string;
   value: number;
 };
 
-type FormatterFn = (value: string | number) => string | number;
+type FormatterFn<T extends string | number> = (value: T) => string | number;
 export type ValueFormatters = {
-  category?: FormatterFn;
-  value?: FormatterFn;
-  data?: FormatterFn;
-  tooltip?: FormatterFn;
+  category?: FormatterFn<DataItem["category"]>;
+  value?: FormatterFn<DataItem["value"]>;
+  data?: FormatterFn<DataItem["value"]>;
+  tooltip?: FormatterFn<DataItem["value"]>;
 };

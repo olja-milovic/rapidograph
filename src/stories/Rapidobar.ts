@@ -1,4 +1,3 @@
-import "@components/rapido-bar";
 import "./rapidobar.css";
 import type {
   DataItem,
@@ -8,7 +7,7 @@ import type {
   ValueFormatters,
   XAxisPosition,
   YAxisPosition,
-} from "@types";
+} from "../../lib";
 
 import { classMap } from "lit/directives/class-map.js";
 import { html } from "lit";
@@ -26,7 +25,7 @@ export interface RapidobarProps {
   data: DataItem[];
 }
 
-export const Rapidobar = ({
+export const RapidoBar = ({
   orientation,
   theme,
   xAxisPosition,
