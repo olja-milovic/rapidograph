@@ -28,12 +28,3 @@ export const ShowLabels = {
   Hover: "hover",
 } as const;
 export type ShowLabels = (typeof ShowLabels)[keyof typeof ShowLabels];
-
-export const TooltipPosition = {
-  Left: "left",
-  Right: "right",
-  Top: "top",
-  Bottom: "bottom",
-} as const;
-export type TooltipPosition =
-  (typeof TooltipPosition)[keyof typeof TooltipPosition];

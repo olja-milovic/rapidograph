@@ -23,12 +23,12 @@ export default defineConfig({
     rollupOptions: {
       external: ["lit", /^lit\//, /^@lit\//],
       input: Object.fromEntries(
-        glob
-          .sync("lib/components/**/*.ts")
-          .map((file) => [
+        [...glob.sync("lib/*.ts"), ...glob.sync("lib/components/**/*.ts")].map(
+          (file) => [
             relative("lib", file.slice(0, file.length - extname(file).length)),
             fileURLToPath(new URL(file, import.meta.url)),
-          ]),
+          ],
+        ),
       ),
 
       output: {
