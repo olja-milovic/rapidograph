@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+- Removed private: true from package.json.
+
 ## [1.0.3] - 2026-01-12
 
 - Changelog updated.
