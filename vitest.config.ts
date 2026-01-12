@@ -12,12 +12,12 @@ const dirname =
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig({
   test: {
+    exclude: ["src/**/*.stories.ts"],
     projects: [
       {
         test: {
           name: "unit",
           include: ["lib/**/*.test.ts"],
-          exclude: ["src/**/*.stories.ts"],
         },
       },
       {
