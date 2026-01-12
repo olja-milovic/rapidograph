@@ -7,6 +7,7 @@ Theming is based on CSS and design tokens rather than chart-specific configurati
 ## Built-in Themes
 
 Charts support two built-in themes:
+
 - light
 - dark
 
@@ -15,6 +16,7 @@ Charts support two built-in themes:
 Bar chart example:
 
 ```html
+
 <rapido-bar theme="dark"></rapido-bar>
 ```
 
@@ -53,4 +55,5 @@ Theming should preserve sufficient contrast between visual elements such as bars
 [//]: # (## Storybook Reference)
 
 [//]: # ()
+
 [//]: # (All supported themes and styling hooks are demonstrated in Storybook. Storybook is the authoritative reference for visual behavior.)

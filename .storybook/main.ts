@@ -5,7 +5,7 @@ const config: StorybookConfig = {
   addons: [
     "@storybook/addon-vitest",
     "@storybook/addon-a11y",
-    "@storybook/addon-docs"
+    "@storybook/addon-docs",
   ],
   framework: "@storybook/web-components-vite",
 };

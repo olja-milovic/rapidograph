@@ -2,7 +2,8 @@
 
 This guide explains how to install Rapidograph and render your first chart.
 
-Rapidograph is a charting design system built with Web Components, which means it can be used in any modern frontend environment.
+Rapidograph is a charting design system built with Web Components, which means it can be used in any modern frontend
+environment.
 
 ## Installation
 
@@ -15,7 +16,6 @@ pnpm add rapidograph
 ```
 
 ## Basic Usage
-
 
 Rapidograph components are standard custom elements and can be used directly in HTML.
 
@@ -57,8 +57,8 @@ Charts consume structured data rather than positional coordinates.
 
 ```typescript
 type DataItem = {
-  category: string;
-  value: number;
+	category: string;
+	value: number;
 };
 ```
 

@@ -66,7 +66,8 @@ Charts are rendered using **HTML and CSS** instead of SVG or Canvas, making them
   Support for light and dark themes. Colors and typography controlled via CSS.
 
 - 🔑 **Accessible by design**  
-  Charts are built with accessibility in mind, using predictable interaction patterns and support for assistive technologies.  
+  Charts are built with accessibility in mind, using predictable interaction patterns and support for assistive
+  technologies.  
   Accessibility is treated as a core requirement, not an afterthought.
 
 ## Installation
@@ -80,6 +81,7 @@ npm install rapidograph
 Rapidograph components are standard Web Components and can be used in any environment.
 
 ```html
+
 <rapido-bar
   id="rapido-bar"
   category-label="Dates"
@@ -102,6 +104,7 @@ Rapidograph components are standard Web Components and can be used in any enviro
 Charts support **light** and **dark** themes out of the box.
 
 ```html
+
 <rapido-bar id="rapido-bar" theme="dark"></rapido-bar>
 ```
 
@@ -109,15 +112,15 @@ Themes can be further customized per-instance using CSS variables such as:
 
 ```css
 #rapido-bar {
-  /*light theme colors*/
-  --rpg-bar-color: #85b8ff;
-  --rpg-bar-color-hover: #579cff;
-  /*...*/
+	/*light theme colors*/
+	--rpg-bar-color: #85b8ff;
+	--rpg-bar-color-hover: #579cff;
+	/*...*/
 
-  /*dark theme colors*/
-  --rpg-bar-color-dark: #0055cc;
-  --rpg-bar-color-hover-dark: #0c65e3;
-  /*...*/
+	/*dark theme colors*/
+	--rpg-bar-color-dark: #0055cc;
+	--rpg-bar-color-hover-dark: #0c65e3;
+	/*...*/
 }
 ```
 
@@ -126,9 +129,11 @@ Rapidograph is designed to integrate naturally with application-level theming sy
 [//]: # (## Documentation)
 
 [//]: # ()
+
 [//]: # (Rapidograph uses **Storybook as the primary documentation surface**.)
 
 [//]: # ()
+
 [//]: # (Each chart is documented through interactive stories that demonstrate:)
 
 [//]: # (- configuration options)
@@ -140,6 +145,7 @@ Rapidograph is designed to integrate naturally with application-level theming sy
 [//]: # (- accessibility considerations)
 
 [//]: # ()
+
 [//]: # (### 📘Storybook)
 
 [//]: # (➡️<a href="storybook-link">View Storybook</a>)
@@ -151,6 +157,7 @@ Rapidograph is designed to integrate naturally with application-level theming sy
 > The Bar Chart is currently the **only chart available** in Rapidograph.
 
 It is:
+
 - orientation-agnostic (vertical - default, or horizontal)
 - theme-aware (light and dark)
 

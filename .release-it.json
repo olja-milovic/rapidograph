@@ -8,7 +8,6 @@
   },
   "github": {
     "release": true,
-    "draft": true,
     "releaseName": "${version}",
     "tokenRef": "GITHUB_TOKEN"
   },
