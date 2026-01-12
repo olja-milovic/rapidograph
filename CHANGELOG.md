@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [1.0.4] - 2026-01-12
 
 - Removed private: true from package.json.
 - Updated release.yml.
