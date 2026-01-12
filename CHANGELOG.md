@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 - Removed private: true from package.json.
+- Updated release.yml.
 
 ## [1.0.3] - 2026-01-12
 
