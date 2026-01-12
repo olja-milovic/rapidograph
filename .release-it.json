@@ -1,12 +1,14 @@
 {
   "$schema": "https://unpkg.com/release-it/schema/release-it.json",
   "git": {
-    "commitMessage": "chore: release v${version}"
+    "commitMessage": "chore: release ${version}",
+    "tagName": "${version}",
+    "requireCleanWorkingDir": true,
+    "requireBranch": "main"
   },
   "github": {
     "release": true,
-    "draft": true,
-    "releaseName": "v${version}",
+    "releaseName": "${version}",
     "tokenRef": "GITHUB_TOKEN"
   },
   "npm": {
@@ -15,7 +17,7 @@
   "hooks": {
     "before:init": "npm run lint",
     "after:bump": "npm run build",
-    "after:release": "echo Successfully released ${name} v${version} to npm and GitHub!"
+    "after:release": "echo Successfully released ${name} ${version} to npm and GitHub"
   },
   "plugins": {
     "@release-it/keep-a-changelog": {
