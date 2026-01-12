@@ -5,3 +5,7 @@
 ### Added
 
 - Keep-a-changelog plugin added.
+
+## [Unreleased]
+
+- Build configuration steps de-duplicated.
