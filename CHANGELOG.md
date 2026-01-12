@@ -4,6 +4,7 @@
 
 - Removed private: true from package.json.
 - Updated release.yml.
+- Updated .release-it.json.
 
 ## [1.0.3] - 2026-01-12
 
