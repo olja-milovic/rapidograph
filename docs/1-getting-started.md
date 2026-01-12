@@ -20,7 +20,6 @@ pnpm add rapidograph
 Rapidograph components are standard custom elements and can be used directly in HTML.
 
 ```html
-
 <rapido-bar
   id="rapido-bar"
   orientation="vertical"
@@ -57,8 +56,8 @@ Charts consume structured data rather than positional coordinates.
 
 ```typescript
 type DataItem = {
-	category: string;
-	value: number;
+  category: string;
+  value: number;
 };
 ```
 
@@ -71,7 +70,7 @@ type DataItem = {
 Formatters for different parts of the data representations can be passed to the charts:
 
 | Formatter key | Description             |
-|---------------|-------------------------|
+| ------------- | ----------------------- |
 | `category`    | Axis labels             |
 | `value`       | Axis values             |
 | `data`        | Bar labels              |
@@ -81,11 +80,11 @@ Formatters for different parts of the data representations can be passed to the 
 
 Rapidograph works with all major frameworks because it is built with Web Components.
 
-[//]: # (Framework-specific examples are documented in Storybook.)
+[//]: # "Framework-specific examples are documented in Storybook."
 
 ## Next Steps
 
 - Explore theming options
 - Read about Rapidograph’s architecture
 
-[//]: # (- Review chart behavior in Storybook)
+[//]: # "- Review chart behavior in Storybook"

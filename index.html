@@ -1,59 +1,54 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>rapido-graph</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
-    rel="stylesheet"
-  />
-  <script type="module" src="/lib/components/rapido-bar/index.ts"></script>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>rapido-graph</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
+      rel="stylesheet"
+    />
+    <script type="module" src="/lib/components/rapido-bar/index.ts"></script>
 
-  <script>
-    window.onload = function () {
-      const rapidograph = document.querySelector("rapido-bar");
-      rapidograph.data = [
-        {category: "Jan 2023", value: 1},
-        {category: "Feb 2023", value: 0},
-        {category: "Mar 2023", value: 3},
-        {category: "Apr 2023", value: -12},
-        {category: "May 2023", value: -6},
-        {category: "Jun 2023", value: -10},
-        {category: "Jul 2023", value: 5},
-        {category: "Aug 2023", value: 1},
-        {category: "Sep 2023", value: 0},
-        {category: "Oct 2023", value: 12},
-        {category: "Nov 2023", value: -12},
-        {category: "Dec 2023", value: -1},
-      ];
-      rapidograph.formatters = {
-        value: (value) => `${value}%`,
-        category: (value) => `${value}%`,
-        data: (value) => `${value}%`,
-        tooltip: (value) => `${value} percent`,
+    <script>
+      window.onload = function () {
+        const rapidograph = document.querySelector("rapido-bar");
+        rapidograph.data = [
+          { category: "Jan 2023", value: 1 },
+          { category: "Feb 2023", value: 0 },
+          { category: "Mar 2023", value: 3 },
+          { category: "Apr 2023", value: -12 },
+          { category: "May 2023", value: -6 },
+          { category: "Jun 2023", value: -10 },
+          { category: "Jul 2023", value: 5 },
+          { category: "Aug 2023", value: 1 },
+          { category: "Sep 2023", value: 0 },
+          { category: "Oct 2023", value: 12 },
+          { category: "Nov 2023", value: -12 },
+          { category: "Dec 2023", value: -1 },
+        ];
+        rapidograph.formatters = {
+          value: (value) => `${value}%`,
+          category: (value) => `${value}%`,
+          data: (value) => `${value}%`,
+          tooltip: (value) => `${value} percent`,
+        };
       };
-    };
-  </script>
-</head>
-<body>
-<main
-  style="
-    height: 400px;
-    padding: 1rem;
-    font-family: Inter, sans-serif;
-  ">
-  <rapido-bar
-    orientation="vertical"
-    x-axis-position="bottom"
-    y-axis-position="left"
-    theme="light"
-    show-labels="always"
-    category-label="Month"
-    value-label="Number (%)"
-  ></rapido-bar>
-</main>
-</body>
+    </script>
+  </head>
+  <body>
+    <main style="height: 400px; padding: 1rem; font-family: Inter, sans-serif">
+      <rapido-bar
+        orientation="vertical"
+        x-axis-position="bottom"
+        y-axis-position="left"
+        theme="light"
+        show-labels="always"
+        category-label="Month"
+        value-label="Number (%)"
+      ></rapido-bar>
+    </main>
+  </body>
 </html>

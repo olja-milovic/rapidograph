@@ -24,25 +24,16 @@
   Lightweight, theme-aware, responsive charts rendered with HTML and CSS.
 </p>
 
-[//]: # (<p style="text-align: center;">)
-
-[//]: # (  <a href="https://github.com/your-org/rapidograph/actions">)
-
-[//]: # (    <img src="https://img.shields.io/github/actions/workflow/status/olja-milovic/rapidograph/ci.yml"  alt="workflow-status"/>)
-
-[//]: # (  </a>)
-
-[//]: # (  <a href="https://www.npmjs.com/package/rapidograph">)
-
-[//]: # (    <img src="https://img.shields.io/npm/v/rapidograph"  alt="npm-package"/>)
-
-[//]: # (  </a>)
-
-[//]: # (  <img src="https://img.shields.io/bundlephobia/minzip/rapidograph"  alt="bundlephobia"/>)
-
-[//]: # (  <img src="https://img.shields.io/npm/l/rapidograph"  alt="license"/>)
-
-[//]: # (</p>)
+[//]: # '<p style="text-align: center;">'
+[//]: # '  <a href="https://github.com/your-org/rapidograph/actions">'
+[//]: # '    <img src="https://img.shields.io/github/actions/workflow/status/olja-milovic/rapidograph/ci.yml"  alt="workflow-status"/>'
+[//]: # "  </a>"
+[//]: # '  <a href="https://www.npmjs.com/package/rapidograph">'
+[//]: # '    <img src="https://img.shields.io/npm/v/rapidograph"  alt="npm-package"/>'
+[//]: # "  </a>"
+[//]: # '  <img src="https://img.shields.io/bundlephobia/minzip/rapidograph"  alt="bundlephobia"/>'
+[//]: # '  <img src="https://img.shields.io/npm/l/rapidograph"  alt="license"/>'
+[//]: # "</p>"
 
 ## Overview
 
@@ -81,7 +72,6 @@ npm install rapidograph
 Rapidograph components are standard Web Components and can be used in any environment.
 
 ```html
-
 <rapido-bar
   id="rapido-bar"
   category-label="Dates"
@@ -92,9 +82,9 @@ Rapidograph components are standard Web Components and can be used in any enviro
   const rapidobar = document.getElementById("rapido-bar");
 
   rapidobar.data = [
-    {category: "Jan", value: 10},
-    {category: "Feb", value: -5},
-    {category: "Mar", value: 15}
+    { category: "Jan", value: 10 },
+    { category: "Feb", value: -5 },
+    { category: "Mar", value: 15 },
   ];
 </script>
 ```
@@ -104,7 +94,6 @@ Rapidograph components are standard Web Components and can be used in any enviro
 Charts support **light** and **dark** themes out of the box.
 
 ```html
-
 <rapido-bar id="rapido-bar" theme="dark"></rapido-bar>
 ```
 
@@ -112,43 +101,32 @@ Themes can be further customized per-instance using CSS variables such as:
 
 ```css
 #rapido-bar {
-	/*light theme colors*/
-	--rpg-bar-color: #85b8ff;
-	--rpg-bar-color-hover: #579cff;
-	/*...*/
+  /*light theme colors*/
+  --rpg-bar-color: #85b8ff;
+  --rpg-bar-color-hover: #579cff;
+  /*...*/
 
-	/*dark theme colors*/
-	--rpg-bar-color-dark: #0055cc;
-	--rpg-bar-color-hover-dark: #0c65e3;
-	/*...*/
+  /*dark theme colors*/
+  --rpg-bar-color-dark: #0055cc;
+  --rpg-bar-color-hover-dark: #0c65e3;
+  /*...*/
 }
 ```
 
 Rapidograph is designed to integrate naturally with application-level theming systems.
 
-[//]: # (## Documentation)
-
-[//]: # ()
-
-[//]: # (Rapidograph uses **Storybook as the primary documentation surface**.)
-
-[//]: # ()
-
-[//]: # (Each chart is documented through interactive stories that demonstrate:)
-
-[//]: # (- configuration options)
-
-[//]: # (- layout variations)
-
-[//]: # (- theming)
-
-[//]: # (- accessibility considerations)
-
-[//]: # ()
-
-[//]: # (### 📘Storybook)
-
-[//]: # (➡️<a href="storybook-link">View Storybook</a>)
+[//]: # "## Documentation"
+[//]: #
+[//]: # "Rapidograph uses **Storybook as the primary documentation surface**."
+[//]: #
+[//]: # "Each chart is documented through interactive stories that demonstrate:"
+[//]: # "- configuration options"
+[//]: # "- layout variations"
+[//]: # "- theming"
+[//]: # "- accessibility considerations"
+[//]: #
+[//]: # "### 📘Storybook"
+[//]: # '➡️<a href="storybook-link">View Storybook</a>'
 
 ## Available Charts
 
