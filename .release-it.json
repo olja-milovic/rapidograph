@@ -3,11 +3,12 @@
   "git": {
     "commitMessage": "chore: release ${version}",
     "tagName": "${version}",
-    "requireCleanWorkingDir": true,
+    "requireCleanWorkingDir": false,
     "requireBranch": "main"
   },
   "github": {
     "release": true,
+    "draft": true,
     "releaseName": "${version}",
     "tokenRef": "GITHUB_TOKEN"
   },
