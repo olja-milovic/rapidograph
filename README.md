@@ -51,8 +51,8 @@ It provides a small set of **chart primitives** designed to integrate seamlessly
 
 Charts are rendered using **HTML and CSS** instead of SVG or Canvas, making them easy to style, theme, and reason about.
 
-> ⚠️ At the moment, Rapidograph includes **only a Bar Chart**.
-> Additional chart types will be introduced incrementally.
+> ⚠️ At the moment, Rapidograph includes **only a Bar Chart**.  
+> 📝 Additional chart types will be introduced incrementally.
 
 ## Principles
 
