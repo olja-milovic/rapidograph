@@ -18,7 +18,7 @@ Use the Bar Chart when:
 The Bar Chart supports both vertical and horizontal orientations.
 The same dataset can be rendered in different orientations without modification.
 
-[//]: # (Refer to Storybook for orientation examples and layout behavior.)
+[//]: # "Refer to Storybook for orientation examples and layout behavior."
 
 ## Examples and API
 

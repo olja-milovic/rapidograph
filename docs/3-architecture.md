@@ -32,8 +32,6 @@ layouts without changing the data model.
 Accessibility is treated as a core requirement. Charts aim to expose meaningful structure to assistive technologies and
 avoid relying on purely visual cues.
 
-[//]: # (## Storybook as Living Documentation)
-
-[//]: # ()
-
-[//]: # (Storybook serves as the canonical reference for component behavior, configuration, and edge cases. Markdown documentation focuses on principles and guidance.)
+[//]: # "## Storybook as Living Documentation"
+[//]: #
+[//]: # "Storybook serves as the canonical reference for component behavior, configuration, and edge cases. Markdown documentation focuses on principles and guidance."
