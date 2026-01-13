@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+## Fixed
+
+- Use "reflect: true" on theme and orientation in rapido-bar.
+
 ## [1.0.6] - 2026-01-13
 
 ### Added
