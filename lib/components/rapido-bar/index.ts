@@ -135,16 +135,16 @@ export class Rapidobar extends LitElement {
   orientation: Orientation = Orientation.Vertical;
 
   @property({ type: XAxisPosition, attribute: "x-axis-position" })
-  xAxisPosition = XAxisPosition.Bottom;
+  xAxisPosition: XAxisPosition = XAxisPosition.Bottom;
 
   @property({ type: YAxisPosition, attribute: "y-axis-position" })
-  yAxisPosition = YAxisPosition.Left;
+  yAxisPosition: YAxisPosition = YAxisPosition.Left;
 
   @property({ type: Theme, attribute: "theme" })
-  theme = Theme.Light;
+  theme: Theme = Theme.Light;
 
   @property({ type: Theme, attribute: "tooltip-theme" })
-  tooltipTheme = Theme.Light;
+  tooltipTheme: Theme = Theme.Light;
 
   @property({ type: String, attribute: "category-label" })
   categoryLabel: string = "";
@@ -153,7 +153,7 @@ export class Rapidobar extends LitElement {
   valueLabel: string = "";
 
   @property({ type: ShowLabels, attribute: "show-labels" })
-  showLabels = ShowLabels.Always;
+  showLabels: ShowLabels = ShowLabels.Always;
 
   private get _wrapperClasses() {
     return {

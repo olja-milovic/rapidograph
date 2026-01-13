@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- Types to rapido-bar attributes.
+
 ## [1.0.5] - 2026-01-13
 
 ### Fixed
