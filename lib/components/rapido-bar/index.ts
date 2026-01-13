@@ -131,7 +131,7 @@ export class Rapidobar extends LitElement {
   @property({ type: Object, attribute: false })
   formatters: ValueFormatters = {};
 
-  @property({ type: Orientation })
+  @property({ type: Orientation, attribute: "orientation" })
   orientation: Orientation = Orientation.Vertical;
 
   @property({ type: XAxisPosition, attribute: "x-axis-position" })
@@ -140,7 +140,7 @@ export class Rapidobar extends LitElement {
   @property({ type: YAxisPosition, attribute: "y-axis-position" })
   yAxisPosition = YAxisPosition.Left;
 
-  @property({ type: Theme })
+  @property({ type: Theme, attribute: "theme" })
   theme = Theme.Light;
 
   @property({ type: Theme, attribute: "tooltip-theme" })
