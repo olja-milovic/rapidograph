@@ -31,8 +31,8 @@
       "default": "./dist/index.js"
     },
     "./*": {
-      "types": "./dist/components/*.d.ts",
-      "default": "./dist/components/*.js"
+      "types": "./dist/components/*/index.d.ts",
+      "default": "./dist/components/*/index.js"
     }
   },
   "sideEffects": false,

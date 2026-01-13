@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+## Fixed
+
+- "exports" in package.json.
+
 ## [1.0.7] - 2026-01-13
 
 ## Fixed
