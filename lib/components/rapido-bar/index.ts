@@ -25,13 +25,11 @@ import {
   unsafeCSS,
 } from "lit";
 import {
+  analyzeValues,
   calculateYAxisWidths,
-  checkIfAllPositiveOrNegative,
-  checkIfSomePositiveAndNegative,
   formatLabel,
   formatLabels,
   generateTicks,
-  getMinAndMax,
   getScrollbarSize,
   getSizeInPercentages,
   getTextWidth,
@@ -53,6 +51,12 @@ import styles from "./rapidobar.css?inline";
 
 @customElement("rapido-bar")
 export class Rapidobar extends LitElement {
+  static {
+    if (!customElements.get("tool-tip")) {
+      customElements.define("tool-tip", Tooltip);
+    }
+  }
+
   static get styles() {
     return css`
       ${unsafeCSS(styles)}
@@ -117,14 +121,16 @@ export class Rapidobar extends LitElement {
       categories[index] = category;
       values[index] = value;
     });
+
+    const analysis = analyzeValues(values);
+    this._hasPositive = analysis.hasPositive;
+    this._hasNegative = analysis.hasNegative;
+    this._allPositive = analysis.allPositive;
+    this._allNegative = analysis.allNegative;
+
     this._categoryLabels = formatLabels(categories, this.formatters.category);
-    const [minBarSize, maxBarSize] = getMinAndMax(values);
-    this._ticks = generateTicks(minBarSize, maxBarSize);
+    this._ticks = generateTicks(analysis.axisMin, analysis.axisMax);
     this._tickLabels = formatLabels(this._ticks, this.formatters.value);
-    [this._hasPositive, this._hasNegative] =
-      checkIfSomePositiveAndNegative(values);
-    [this._allPositive, this._allNegative] =
-      checkIfAllPositiveOrNegative(values);
     this._calculateTickWidths();
   }
 
@@ -210,12 +216,10 @@ export class Rapidobar extends LitElement {
       yAxisLabels = this._categoryLabels;
     }
 
-    const xAxisLabelTemplates = [];
-    for (const label of xAxisLabels) {
-      xAxisLabelTemplates.push(html`
-        <div class="rpg-axis-label" title=${label}>${label}</div>
-      `);
-    }
+    const xAxisLabelTemplates = xAxisLabels.map(
+      (label) =>
+        html`<div class="rpg-axis-label" title=${label}>${label}</div>`,
+    );
     const xAxisTemplate = html`
       <div class="rpg-x-axis">
         ${xAxisLabel
@@ -227,12 +231,10 @@ export class Rapidobar extends LitElement {
       </div>
     `;
 
-    const yAxisLabelTemplates = [];
-    for (const label of yAxisLabels) {
-      yAxisLabelTemplates.push(html`
-        <div class="rpg-axis-label" title=${label}>${label}</div>
-      `);
-    }
+    const yAxisLabelTemplates = yAxisLabels.map(
+      (label) =>
+        html`<div class="rpg-axis-label" title=${label}>${label}</div>`,
+    );
 
     // tabindex matches flex order - visual and focus order are synchronized
     const yAxisTemplate = html`
@@ -261,13 +263,11 @@ export class Rapidobar extends LitElement {
       </div>
     `;
 
-    const gridlineTemplates = [];
-    for (let i = 0; i < this._ticks.length - 1; i++) {
-      gridlineTemplates.push(html`<div class="rpg-gridline"></div>`);
-    }
+    const gridlineTemplates = this._ticks
+      .slice(1)
+      .map(() => html`<div class="rpg-gridline"></div>`);
 
-    const barTemplates = [];
-    for (const [index, { value }] of this.data.entries()) {
+    const barTemplates = this.data.map(({ value }, index) => {
       const isFocused = index === this._focusedBarIndex;
       const category = this._categoryLabels[index];
       const axisValue = this._tickLabels[index];
@@ -285,25 +285,23 @@ export class Rapidobar extends LitElement {
         this._ticks.at(-1),
       );
 
-      barTemplates.push(
-        html`<li
-          class="rpg-bar ${isPositive ? "positive" : "negative"}"
-          tabindex=${isFocused ? 0 : -1}
-          aria-current=${isFocused ? "true" : "false"}
-          aria-label="${category}: ${axisValue}"
-          data-category=${category}
-          data-value=${tooltipValue}
+      return html`<li
+        class="rpg-bar ${isPositive ? "positive" : "negative"}"
+        tabindex=${isFocused ? 0 : -1}
+        aria-current=${isFocused ? "true" : "false"}
+        aria-label="${category}: ${axisValue}"
+        data-category=${category}
+        data-value=${tooltipValue}
+      >
+        <div
+          class="rpg-bar-content"
+          style="--rpg-bar-size: ${Math.abs(barSize)}%;"
         >
-          <div
-            class="rpg-bar-content"
-            style="--rpg-bar-size: ${Math.abs(barSize)}%;"
-          >
-            <div class="rpg-bar-label">${barValue}</div>
-            <div class="rpg-small-bar-label">${barValue}</div>
-          </div>
-        </li>`,
-      );
-    }
+          <div class="rpg-bar-label">${barValue}</div>
+          <div class="rpg-small-bar-label">${barValue}</div>
+        </div>
+      </li>`;
+    });
 
     return html`
       <div
@@ -344,13 +342,6 @@ export class Rapidobar extends LitElement {
     `;
   }
 
-  connectedCallback(): void {
-    super.connectedCallback();
-    if (!customElements.get("tool-tip")) {
-      customElements.define("tool-tip", Tooltip);
-    }
-  }
-
   protected firstUpdated(_changedProperties: PropertyValues): void {
     super.firstUpdated(_changedProperties);
 
@@ -360,10 +351,10 @@ export class Rapidobar extends LitElement {
 
   updated(changedProperties: Map<string, never>) {
     if (this._xAxis) {
-      this._xAxisHeight = this._xAxis.getBoundingClientRect().height ?? 1 - 1;
+      this._xAxisHeight = (this._xAxis.getBoundingClientRect().height || 1) - 1;
     }
 
-    if (changedProperties.get("orientation") || changedProperties.get("data")) {
+    if (changedProperties.has("orientation") || changedProperties.has("data")) {
       this._calculateYAxisWidths();
     }
   }
@@ -480,27 +471,26 @@ export class Rapidobar extends LitElement {
     this._isDraggingYAxis = true;
 
     let newWidth = this._yAxisWidth;
-    const self = this;
 
     const handlePointerMove = (pointerMoveEvent: PointerEvent) => {
-      const parent = self._wrapper;
+      const parent = this._wrapper;
 
       const moveClientX = pointerMoveEvent.clientX;
       const downClientX = pointerDownEvent.clientX;
 
       newWidth =
-        self._yAxisWidth +
-        (self.yAxisPosition === YAxisPosition.Left
+        this._yAxisWidth +
+        (this.yAxisPosition === YAxisPosition.Left
           ? moveClientX - downClientX
           : downClientX - moveClientX);
-      let allowedMaxWidth = self._yAxisMaxWidth;
+      let allowedMaxWidth = this._yAxisMaxWidth;
 
       // the pointer is out of slider => lock the thumb within the boundaries
-      if (newWidth < self._yAxisMinWidth) {
-        newWidth = self._yAxisMinWidth;
+      if (newWidth < this._yAxisMinWidth) {
+        newWidth = this._yAxisMinWidth;
       }
 
-      if (self._yAxisMaxWidth > parent.offsetWidth - MAX_Y_AXIS_WIDTH) {
+      if (this._yAxisMaxWidth > parent.offsetWidth - MAX_Y_AXIS_WIDTH) {
         allowedMaxWidth = parent.offsetWidth - MAX_Y_AXIS_WIDTH;
       }
       if (newWidth > allowedMaxWidth) {
@@ -509,19 +499,19 @@ export class Rapidobar extends LitElement {
       this._wrapper.style.setProperty(Y_AXIS_WIDTH_CSS_VAR, `${newWidth}px`);
     };
 
-    function handlePointerUp(): void {
-      self._yAxisWidth = newWidth;
-      self._isDraggingYAxis = false;
-      if (self._oldCursor) {
-        document.body.style.cursor = self._oldCursor;
+    const handlePointerUp = () => {
+      this._yAxisWidth = newWidth;
+      this._isDraggingYAxis = false;
+      if (this._oldCursor) {
+        document.body.style.cursor = this._oldCursor;
       } else {
         document.body.style.removeProperty("cursor");
       }
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerup", handlePointerUp);
-    }
+    };
 
-    self._oldCursor = document.body.style.cursor;
+    this._oldCursor = document.body.style.cursor;
     document.body.style.cursor = "col-resize";
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp);
@@ -572,8 +562,8 @@ export class Rapidobar extends LitElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    this._vObserver?.unobserve(this._barContainer);
-    this._hObserver?.unobserve(this._barContainer);
+    this._vObserver?.disconnect();
+    this._hObserver?.disconnect();
   }
 }
 

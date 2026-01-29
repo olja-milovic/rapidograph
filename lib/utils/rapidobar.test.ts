@@ -2,13 +2,11 @@
 // @ts-nocheck
 
 import {
-  checkIfAllPositiveOrNegative,
-  checkIfSomePositiveAndNegative,
+  analyzeValues,
   echo,
   formatLabel,
   formatLabels,
   generateTicks,
-  getMinAndMax,
   getSizeInPercentages,
   getUpdatedYAxisWidth,
   noop,
@@ -50,26 +48,67 @@ describe("echo", () => {
   });
 });
 
-describe("checkIfSomePositiveAndNegative", () => {
-  it("should check array with various values", () => {
-    expect(checkIfSomePositiveAndNegative([-1, 2, -3])).toEqual([true, true]);
-    expect(checkIfSomePositiveAndNegative([-1, -2, -3])).toEqual([false, true]);
-    expect(checkIfSomePositiveAndNegative([1, 2, 3])).toEqual([true, false]);
-    expect(checkIfSomePositiveAndNegative([1, -2, -3])).toEqual([true, true]);
-    expect(checkIfSomePositiveAndNegative([1])).toEqual([true, false]);
-    expect(checkIfSomePositiveAndNegative([])).toEqual([false, false]);
+describe("analyzeValues", () => {
+  it("should return default values for empty array", () => {
+    expect(analyzeValues([])).toEqual({
+      min: 0,
+      max: 0,
+      axisMin: 0,
+      axisMax: 0,
+      hasPositive: false,
+      hasNegative: false,
+      allPositive: false,
+      allNegative: false,
+    });
   });
-});
 
-describe("checkIfAllPositiveOrNegative", () => {
-  it("should check array with various values", () => {
-    expect(checkIfAllPositiveOrNegative([1, 2, 3])).toEqual([true, false]);
-    expect(checkIfAllPositiveOrNegative([-1, -2, -3])).toEqual([false, true]);
-    expect(checkIfAllPositiveOrNegative([1, -2, -3])).toEqual([false, false]);
-    expect(checkIfAllPositiveOrNegative([-1, 2, 3])).toEqual([false, false]);
-    expect(checkIfAllPositiveOrNegative([1])).toEqual([true, false]);
-    expect(checkIfAllPositiveOrNegative([-1])).toEqual([false, true]);
-    expect(checkIfAllPositiveOrNegative([])).toEqual([false, false]);
+  it("should analyze all positive values", () => {
+    const result = analyzeValues([1, 2, 3]);
+    expect(result.min).toBe(1);
+    expect(result.max).toBe(3);
+    expect(result.axisMin).toBe(1);
+    expect(result.axisMax).toBe(3);
+    expect(result.hasPositive).toBe(true);
+    expect(result.hasNegative).toBe(false);
+    expect(result.allPositive).toBe(true);
+    expect(result.allNegative).toBe(false);
+  });
+
+  it("should analyze all negative values", () => {
+    const result = analyzeValues([-1, -2, -3]);
+    expect(result.min).toBe(-3);
+    expect(result.max).toBe(-1);
+    expect(result.axisMin).toBe(-3);
+    expect(result.axisMax).toBe(-1);
+    expect(result.hasPositive).toBe(false);
+    expect(result.hasNegative).toBe(true);
+    expect(result.allPositive).toBe(false);
+    expect(result.allNegative).toBe(true);
+  });
+
+  it("should create symmetric axis bounds for mixed positive/negative values", () => {
+    const result = analyzeValues([-1, 2, -3]);
+    expect(result.min).toBe(-3);
+    expect(result.max).toBe(2);
+    expect(result.axisMin).toBe(-3);
+    expect(result.axisMax).toBe(3);
+    expect(result.hasPositive).toBe(true);
+    expect(result.hasNegative).toBe(true);
+    expect(result.allPositive).toBe(false);
+    expect(result.allNegative).toBe(false);
+  });
+
+  it("should handle values with zeros", () => {
+    const result = analyzeValues([0, 1, 2]);
+    expect(result.hasPositive).toBe(true);
+    expect(result.hasNegative).toBe(false);
+    expect(result.allPositive).toBe(true);
+    expect(result.allNegative).toBe(false);
+  });
+
+  it("should handle single value", () => {
+    expect(analyzeValues([5]).hasPositive).toBe(true);
+    expect(analyzeValues([-5]).hasNegative).toBe(true);
   });
 });
 
@@ -118,36 +157,6 @@ describe("formatLabels", () => {
   it("should return the original label if no formatter is provided", () => {
     expect(formatLabels(["test1", "test2"])).toEqual(["test1", "test2"]);
     expect(formatLabels([42, 83])).toEqual([42, 83]);
-  });
-});
-
-describe("getMinAndMax", () => {
-  it("should return min and max in an all positive or all negative array of numbers", () => {
-    const randomPositives = [...Array(50)].map(() =>
-      Math.floor(Math.random() * 5001),
-    );
-    const randomNegatives = [...Array(50)].map(() =>
-      Math.floor(Math.random() * -5001),
-    );
-
-    expect(getMinAndMax([0, 100, 400, 258, 300])).toEqual([0, 400]);
-    expect(getMinAndMax([-200, -853, -322, -5])).toEqual([-853, -5]);
-    expect(getMinAndMax(randomPositives)).toEqual([
-      Math.min(...randomPositives),
-      Math.max(...randomPositives),
-    ]);
-    expect(getMinAndMax(randomNegatives)).toEqual([
-      Math.min(...randomNegatives),
-      Math.max(...randomNegatives),
-    ]);
-  });
-
-  it("should return the same number (negative and positive) for array with positive and negative values", () => {
-    const randomArray = [...Array(50)].map(
-      () => Math.floor(Math.random() * 10001) - 5000,
-    );
-    const max = Math.max(...randomArray.map(Math.abs));
-    expect(getMinAndMax(randomArray)).toEqual([-max, max]);
   });
 });
 

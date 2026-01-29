@@ -4,32 +4,64 @@ export function echo<T extends string | number>(value: T): T {
 }
 
 /**
- * Checks whether the dataset contains both positive and negative values.
+ * Analyzes an array of values in a single pass to extract min/max,
+ * axis bounds, and positivity flags.
  * @param {number[]} values - Array of numeric values to analyze.
- * @returns {[boolean, boolean]} Both true if at least one value is positive and one is negative.
  */
-export function checkIfSomePositiveAndNegative(
-  values: number[] = [],
-): [boolean, boolean] {
-  const hasPositive = values.some((value) => value > 0);
-  const hasNegative = values.some((value) => value < 0);
-  return [hasPositive, hasNegative];
-}
-
-/**
- * Checks whether all values in the dataset are either entirely positive or entirely negative.
- * @param {number[]} values - Array of numeric values to check.
- * @returns {[boolean, boolean]} Both true if all values have the same sign (all >= 0 or all <= 0).
- */
-export function checkIfAllPositiveOrNegative(
-  values: number[] = [],
-): [boolean, boolean] {
+export function analyzeValues(values: number[] = []) {
   if (!values.length) {
-    return [false, false];
+    return {
+      min: 0,
+      max: 0,
+      axisMin: 0,
+      axisMax: 0,
+      hasPositive: false,
+      hasNegative: false,
+      allPositive: false,
+      allNegative: false,
+    };
   }
-  const allPositive = values.every((value) => value >= 0);
-  const allNegative = values.every((value) => value <= 0);
-  return [allPositive, allNegative];
+
+  let min = values[0];
+  let max = values[0];
+  let hasPositive = false;
+  let hasNegative = false;
+  let allPositive = true;
+  let allNegative = true;
+
+  for (const value of values) {
+    if (value < min) min = value;
+    if (value > max) max = value;
+
+    if (value > 0) {
+      hasPositive = true;
+      allNegative = false;
+    }
+    if (value < 0) {
+      hasNegative = true;
+      allPositive = false;
+    }
+  }
+
+  // Symmetric axis bounds for mixed positive/negative values
+  let axisMin = min;
+  let axisMax = max;
+  if (hasPositive && hasNegative) {
+    const absMax = Math.max(Math.abs(min), Math.abs(max));
+    axisMin = -absMax;
+    axisMax = absMax;
+  }
+
+  return {
+    min,
+    max,
+    axisMin,
+    axisMax,
+    hasPositive,
+    hasNegative,
+    allPositive,
+    allNegative,
+  };
 }
 
 /**
@@ -55,27 +87,6 @@ export function formatLabels<T extends string | number>(
   formatter: (value: T) => string | number = echo,
 ): (string | number)[] {
   return labels.map((label) => formatLabel(label, formatter));
-}
-
-/**
- * Computes the minimum and maximum values from the dataset.
- * @param {number[]} values - Array of numeric values.
- * @returns {[number, number]} Min and max values.
- */
-export function getMinAndMax(values: number[] = []): [number, number] {
-  if (!values.length) {
-    return [0, 0];
-  }
-
-  const minValue = Math.min(...values);
-  const maxValue = Math.max(...values);
-  const [hasPositive, hasNegative] = checkIfSomePositiveAndNegative(values);
-
-  if (hasPositive && hasNegative) {
-    const max = Math.max(Math.abs(minValue), Math.abs(maxValue));
-    return [-Math.abs(max), max];
-  }
-  return [minValue, maxValue];
 }
 
 /**

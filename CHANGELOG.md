@@ -1,14 +1,21 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- Simplify util functions in rapidobar.ts and dom.ts
+- Use static for registering tooltip as custom element in rapido-bar
+
 ## [1.0.8] - 2026-01-13
 
-## Fixed
+### Fixed
 
 - "exports" in package.json.
 
 ## [1.0.7] - 2026-01-13
 
-## Fixed
+### Fixed
 
 - Use "reflect: true" on theme and orientation in rapido-bar.
 
